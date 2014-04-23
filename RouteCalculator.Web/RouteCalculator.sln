@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteCalculator.Web", "RouteCalculator.Web\RouteCalculator.Web.csproj", "{AB1CA33D-1BEA-41B6-9A75-2D3F52E524FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteCalculator.Domain", "..\RouteCalculator.Domain\RouteCalculator.Domain.csproj", "{9F4A89FC-DCAA-4026-9934-10ECB13E4F86}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AB1CA33D-1BEA-41B6-9A75-2D3F52E524FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB1CA33D-1BEA-41B6-9A75-2D3F52E524FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB1CA33D-1BEA-41B6-9A75-2D3F52E524FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB1CA33D-1BEA-41B6-9A75-2D3F52E524FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F4A89FC-DCAA-4026-9934-10ECB13E4F86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F4A89FC-DCAA-4026-9934-10ECB13E4F86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F4A89FC-DCAA-4026-9934-10ECB13E4F86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F4A89FC-DCAA-4026-9934-10ECB13E4F86}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
