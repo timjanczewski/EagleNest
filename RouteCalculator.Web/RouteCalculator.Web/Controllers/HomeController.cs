@@ -13,9 +13,13 @@ namespace RouteCalculator.Web.Controllers
 {
     public class HomeController : BaseController
     {
+        public Service service = new Service();
+        public MajorAreaRouteExit isFinal = new MajorAreaRouteExit();
+        public string Destination;
+        public string Passthrough;
         public ActionResult Index()
         {
-            List<Vehicle> vehicles = GetVehicles();
+            List<Vehicle> vehicles = service.GetVehicles();
             List<string> Makes = new List<string>();
             foreach (Vehicle v in vehicles)
             {
@@ -40,29 +44,19 @@ namespace RouteCalculator.Web.Controllers
             string[] makemodel = vehicle.Split(delimiterChars);
             Make = makemodel[0].ToString();
             Model = makemodel[1].ToString();
-           
-            var origin = _db.ZipcodePools.Where(x => x.ZipCode == zipcode1);
-            var destination = _db.ZipcodePools.Where(x => x.ZipCode == zipcode2);
 
-            ZipcodePool pool1 = origin.FirstOrDefault();
-            ZipcodePool pool2 = destination.FirstOrDefault();
+            ZipcodePool start = _db.ZipcodePools.Where(x => x.ZipCode == zipcode1).FirstOrDefault();
+            ZipcodePool end = _db.ZipcodePools.Where(x => x.ZipCode == zipcode2).FirstOrDefault();
 
+            MajorArea ma1 = _db.MajorAreas.Where(x => x.Pool1Name == start.PoolName).FirstOrDefault();
+            MajorArea ma2 = _db.MajorAreas.Where(x => x.Pool1Name == end.PoolName).FirstOrDefault();
             
-            
-            var Area1 = _db.MajorAreas.Where(x => x.Pool1Name == pool1.PoolName);
-            MajorArea ma1 = Area1.FirstOrDefault();
-
-            var Area2 = _db.MajorAreas.Where(x => x.Pool1Name == pool2.PoolName);
-            MajorArea ma2 = Area2.FirstOrDefault();
-
             Quote q = new Quote();
             if (ma1 != null && ma2 != null)
             {
-
-                var routes = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName);
-                Route baseprice = routes.FirstOrDefault();
-
-                double multiplier = 1 + GetVehicleMultiplier(Make, Model);
+                Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
+                
+                double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
                 double price = Convert.ToDouble(baseprice.Price) * multiplier + (150);
 
                 q.Vehicle = Make + " " + Model;
@@ -72,12 +66,74 @@ namespace RouteCalculator.Web.Controllers
             }
             else
             {
+                if (ma1 != null && ma2 == null)
+                {
+                    
+                    ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == ma1.Pool1Name).FirstOrDefault(); 
+                    ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault(); 
+                    
+                    List<ClosestMajorArea> cma = GetClosestMA(endPoint.Latitude, endPoint.Longitude);
+
+                    List<RouteRhumb> rr = new List<RouteRhumb>();
+                    foreach (ClosestMajorArea c in cma)
+                    {
+                        RouteRhumb r = new RouteRhumb();
+
+                        r.Zipcode1 = startPoint.ZipCode;
+                        r.lat1 = startPoint.Latitude;
+                        r.lon1 = startPoint.Longitude;
+                        r.ZipCode2 = c.ZipCode;
+                        r.lat2 = c.Latitude;
+                        r.lon2 = c.Longitude;
+                        r.Rhumb = service.GetRhumbLine(r.lat1, r.lon1, r.lat2, r.lon2);
+                        r.Distance = c.Distance;
+
+                        rr.Add(r);
+                    }
+
+                    RouteRhumb or = new RouteRhumb();
+                    or.Zipcode1 = startPoint.ZipCode;
+                    or.lat1 = startPoint.Latitude;
+                    or.lon1 = startPoint.Longitude;
+                    or.ZipCode2 = endPoint.ZipCode;
+                    or.lat2 = endPoint.Latitude;
+                    or.lon2 = endPoint.Longitude;
+                    or.Rhumb = service.GetRhumbLine(or.lat1, or.lon1, or.lat2, or.lon2);
+
+                    var oCoord = new GeoCoordinate(or.lat1, or.lon1);
+                    var eCoord = new GeoCoordinate(or.lat2, or.lon2);
+
+                    or.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
+
+                    ///pull interstates
+
+
+                }
+
+                if (ma2 != null && ma1 == null)
+                { 
+                    ZipcodePoolsPivotPoint oPoint2 = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault();
+                    
+                    List<ClosestMajorArea> cma = GetClosestMA(oPoint2.Latitude, oPoint2.Longitude);
+                }
+                
+                
+                
+                
                 q.Vehicle = Make + " " + Model;
                 q.Area1 = zipcode1;
                 q.Area2 = zipcode2;
                 q.Price = 0;
+            
+                
+            
             }
-            List<Vehicle> vehicles = GetVehicles();
+            
+            
+            
+            
+            
+            List<Vehicle> vehicles = service.GetVehicles();
             List<string> Makes = new List<string>();
             foreach (Vehicle v in vehicles)
             {
@@ -92,40 +148,7 @@ namespace RouteCalculator.Web.Controllers
             return View("Index");
         }
 
-        public List<Vehicle> GetVehicles()
-        {
-
-            var makes = _db.Vehicles;
-
-            List<Vehicle> vehicles = new List<Vehicle>();
-            vehicles = makes.ToList<Vehicle>();
-                        
-            
-            return vehicles;
-        }
-
-        private double GetVehicleMultiplier(string make, string model)
-        {
-            double percent = 0;
-
-            string vmake = make.Trim();
-            string vmodel = model.Trim();
-
-            var vehicle = _db.Vehicles.Where(x => x.Make == vmake && x.Model == vmodel);
-            Vehicle v = vehicle.FirstOrDefault();
-
-            string vClass = v.Category;
-
-            var cat = _db.Categories.Where(c => c.Class == vClass);
-            Category category = cat.FirstOrDefault();
-
-            if (category.PricePercentIncrease > 0)
-            { percent = Convert.ToDouble(category.PricePercentIncrease); }
-
-            return percent;
-        }
-
-        public ActionResult GetClosestMA(double oLat, double oLong)
+        public List<ClosestMajorArea> GetClosestMA(double oLat, double oLong)
         {
             List<ClosestMajorArea> list = new List<ClosestMajorArea>();
 
@@ -137,9 +160,8 @@ namespace RouteCalculator.Web.Controllers
             {
                 try
                 {
-                    var details = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == m.Pool1Name && x.State == m.Pool1State);
-                    ZipcodePoolsPivotPoint z = details.FirstOrDefault();
-
+                    ZipcodePoolsPivotPoint z = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == m.Pool1Name && x.State == m.Pool1State).FirstOrDefault();
+                    
                     ClosestMajorArea cma = new ClosestMajorArea();
                     cma.AreaName = m.MainCityName;
                     cma.ZipCode = z.ZipCode;
@@ -157,18 +179,100 @@ namespace RouteCalculator.Web.Controllers
 
             list = list.OrderBy(x => x.Distance).Take(3).ToList();
 
-            return Json(list, JsonRequestBehavior.AllowGet);
+
+
+            return list;
         }
 
-        public ActionResult GetBearing()
+
+        public ActionResult GetRouteExits(string ma1, string ma2)
         {
-            rhumb r = new rhumb();
+            int start = Convert.ToInt32(ma1.Replace("A", ""));
+            int finish = Convert.ToInt32(ma2.Replace("A", ""));
 
-            //double bearing = r.GetBearing(45.464854, -98.4923, 29.198562, -96.272851);
-            double bearing = r.DegreeBearing(45.464854, -98.4923, 29.198562, -96.272851);
+            string Major1 = string.Empty;
+            string Major2 = string.Empty;
 
-            return Json(bearing, JsonRequestBehavior.AllowGet);
+            if (start < finish)
+            { Major1 = ma1; Major2 = ma2; }
+            else
+            { Major1 = ma2; Major2 = ma1; }
+            
+            var exits = _db.MajorAreaRouteExits.Where(x => x.start == Major1 && x.finish == Major2 && x.RouteLevel != null).OrderBy(o1 => o1.RouteNumber).OrderBy(o2 => o2.RouteLevel); 
+
+            List<MajorAreaRouteExit> maExits = new List<MajorAreaRouteExit>();
+
+            foreach (MajorAreaRouteExit mae in exits)
+            {
+                MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                exit.Id = mae.Id;
+                exit.start = mae.start;
+                exit.finish = mae.finish;
+                exit.RouteNumber = Convert.ToInt32(mae.RouteNumber);
+                exit.RouteLevel = mae.RouteLevel;
+                exit.state = mae.state;
+                exit.interstate = mae.interstate;
+                exit.Exit_from = mae.Exit_from;
+                exit.Exit_to = mae.Exit_to;
+                exit.PassThroughMA = mae.PassThroughMA;
+
+                maExits.Add(exit);
+            }
+            
+            if(Destination == null)
+            { Destination = ma2; }
+
+            if (Passthrough == null)
+            { isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault(); }
+            else
+            { isFinal = maExits.Where(f => f.PassThroughMA == Passthrough).FirstOrDefault(); }
+
+            if (isFinal == null)
+            {
+                MajorAreaRouteExit cont = maExits.FirstOrDefault();
+                int Area = Convert.ToInt32(Destination.Replace("A", ""));
+                int Pass = Convert.ToInt32(cont.PassThroughMA.Replace("A", ""));
+
+                Passthrough = cont.PassThroughMA;
+
+                if (Area < Pass)
+                { GetRouteExits(Destination, "A" + Pass.ToString()); }
+                else
+                { GetRouteExits("A" + Pass.ToString(), Destination); }
+         
+
+            }
+
+            return Json(isFinal, JsonRequestBehavior.AllowGet);
+
         }
+
+        //public Ac GetFinal(string ma1, string ma2)
+        //{
+        //    MajorAreaRouteExit isFinal = exits.Where(f => f.PassThroughMA == ma2).FirstOrDefault();
+
+        //    if (isFinal != null)
+        //    {
+        //        MajorAreaRouteExit cont = maExits.FirstOrDefault();
+        //        int newMA1 = Convert.ToInt32(ma2.Replace("A", ""));
+        //        int newMA2 = Convert.ToInt32(cont.PassThroughMA.Replace("A", ""));
+
+        //        if (newMA1 < newMA2)
+        //        { GetRouteExits("A" + newMA1.ToString(), "A" + newMA2.ToString()); }
+        //        else
+        //        { GetRouteExits("A" + newMA2.ToString(), "A" + newMA1.ToString()); }
+
+
+        //    }
+
+        //}
+
+        //public ActionResult GetFinalRoute(MajorAreaRouteExit exit)
+        //{
+        //    return Json(exit, JsonRequestBehavior.AllowGet);
+        //}
+
         
         
     }

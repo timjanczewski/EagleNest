@@ -25,6 +25,7 @@ namespace RouteCalculator.Domain.Entities
         public DbSet<Category> Categories { get; set; }
         public DbSet<ZipcodePool> ZipcodePools { get; set; }
         public DbSet<ZipcodePoolsPivotPoint> ZipcodePoolsPivotPoints { get; set; }
+        public DbSet<MajorAreaRouteExit> MajorAreaRouteExits { get; set; }
         
     }
 }
