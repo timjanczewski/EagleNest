@@ -74,6 +74,8 @@ namespace RouteCalculator.Web.Controllers
                     
                     List<ClosestMajorArea> cma = GetClosestMA(endPoint.Latitude, endPoint.Longitude);
 
+                    List<MajorAreaRouteExit> mare = new List<MajorAreaRouteExit>();
+
                     List<RouteRhumb> rr = new List<RouteRhumb>();
                     foreach (ClosestMajorArea c in cma)
                     {
@@ -89,6 +91,17 @@ namespace RouteCalculator.Web.Controllers
                         r.Distance = c.Distance;
 
                         rr.Add(r);
+
+                        MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                        exit = GetRouteExits(ma1.AreaName, c.AreaName);
+                        mare.Add(exit);
+                    }
+
+                    List<ClosestExit> closestexits = new List<ClosestExit>();
+                    foreach (MajorAreaRouteExit mae in mare)
+                    {
+                        closestexits.Add(GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude));
                     }
 
                     RouteRhumb or = new RouteRhumb();
@@ -104,8 +117,6 @@ namespace RouteCalculator.Web.Controllers
                     var eCoord = new GeoCoordinate(or.lat2, or.lon2);
 
                     or.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
-
-                    ///pull interstates
 
 
                 }
@@ -124,8 +135,7 @@ namespace RouteCalculator.Web.Controllers
                 q.Area1 = zipcode1;
                 q.Area2 = zipcode2;
                 q.Price = 0;
-            
-                
+                            
             
             }
             
@@ -148,44 +158,8 @@ namespace RouteCalculator.Web.Controllers
             return View("Index");
         }
 
-        public List<ClosestMajorArea> GetClosestMA(double oLat, double oLong)
-        {
-            List<ClosestMajorArea> list = new List<ClosestMajorArea>();
-
-            var oCoord = new GeoCoordinate(oLat, oLong);
-
-            var ma = _db.MajorAreas;
-
-            foreach (MajorArea m in ma)
-            {
-                try
-                {
-                    ZipcodePoolsPivotPoint z = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == m.Pool1Name && x.State == m.Pool1State).FirstOrDefault();
-                    
-                    ClosestMajorArea cma = new ClosestMajorArea();
-                    cma.AreaName = m.MainCityName;
-                    cma.ZipCode = z.ZipCode;
-                    cma.Latitude = z.Latitude;
-                    cma.Longitude = z.Longitude;
-
-                    var maCoord = new GeoCoordinate(cma.Latitude, cma.Longitude);
-
-                    cma.Distance = (oCoord.GetDistanceTo(maCoord) * 3.28084) / 5280;
-
-                    list.Add(cma);
-                }
-                catch { }
-            }
-
-            list = list.OrderBy(x => x.Distance).Take(3).ToList();
-
-
-
-            return list;
-        }
-
-
-        public ActionResult GetRouteExits(string ma1, string ma2)
+        
+        public MajorAreaRouteExit GetRouteExits(string ma1, string ma2)
         {
             int start = Convert.ToInt32(ma1.Replace("A", ""));
             int finish = Convert.ToInt32(ma2.Replace("A", ""));
@@ -221,7 +195,7 @@ namespace RouteCalculator.Web.Controllers
             }
             
             if(Destination == null)
-            { Destination = ma2; }
+            { Destination = Major2; }
 
             if (Passthrough == null)
             { isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault(); }
@@ -234,6 +208,14 @@ namespace RouteCalculator.Web.Controllers
                 int Area = Convert.ToInt32(Destination.Replace("A", ""));
                 int Pass = Convert.ToInt32(cont.PassThroughMA.Replace("A", ""));
 
+                if (("A" + Pass) == Destination)
+                { 
+                    isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault();
+                    Passthrough = null;
+                    Destination = null;
+                    return isFinal;
+                }
+          
                 Passthrough = cont.PassThroughMA;
 
                 if (Area < Pass)
@@ -243,36 +225,85 @@ namespace RouteCalculator.Web.Controllers
          
 
             }
-
-            return Json(isFinal, JsonRequestBehavior.AllowGet);
+            Passthrough = null;
+            Destination = null;
+            return isFinal;
 
         }
 
-        //public Ac GetFinal(string ma1, string ma2)
-        //{
-        //    MajorAreaRouteExit isFinal = exits.Where(f => f.PassThroughMA == ma2).FirstOrDefault();
+        public List<ClosestMajorArea> GetClosestMA(double oLat, double oLong)
+        {
+            List<ClosestMajorArea> list = new List<ClosestMajorArea>();
 
-        //    if (isFinal != null)
-        //    {
-        //        MajorAreaRouteExit cont = maExits.FirstOrDefault();
-        //        int newMA1 = Convert.ToInt32(ma2.Replace("A", ""));
-        //        int newMA2 = Convert.ToInt32(cont.PassThroughMA.Replace("A", ""));
+            var oCoord = new GeoCoordinate(oLat, oLong);
 
-        //        if (newMA1 < newMA2)
-        //        { GetRouteExits("A" + newMA1.ToString(), "A" + newMA2.ToString()); }
-        //        else
-        //        { GetRouteExits("A" + newMA2.ToString(), "A" + newMA1.ToString()); }
+            var ma = _db.MajorAreas;
+
+            foreach (MajorArea m in ma)
+            {
+                try
+                {
+                    ZipcodePoolsPivotPoint z = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == m.Pool1Name && x.State == m.Pool1State).FirstOrDefault();
+
+                    ClosestMajorArea cma = new ClosestMajorArea();
+                    cma.AreaName = m.AreaName;
+                    cma.ZipCode = z.ZipCode;
+                    cma.Latitude = z.Latitude;
+                    cma.Longitude = z.Longitude;
+
+                    var maCoord = new GeoCoordinate(cma.Latitude, cma.Longitude);
+
+                    cma.Distance = (oCoord.GetDistanceTo(maCoord) * 3.28084) / 5280;
+
+                    list.Add(cma);
+                }
+                catch { }
+            }
+
+            list = list.OrderBy(x => x.Distance).Take(3).ToList();
 
 
-        //    }
 
-        //}
+            return list;
+        }
+        public ClosestExit GetClosestExit(MajorAreaRouteExit ma, double lat, double lon)
+        {
+            var routeexits = _db.MajorAreaRouteExits.Where(x => x.start == ma.start && x.finish == ma.finish);
+            
+            List<ClosestExit> list = new List<ClosestExit>();
 
-        //public ActionResult GetFinalRoute(MajorAreaRouteExit exit)
-        //{
-        //    return Json(exit, JsonRequestBehavior.AllowGet);
-        //}
 
+            foreach (MajorAreaRouteExit m in routeexits)
+            {
+                var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID == m.interstate);
+                var oCoord = new GeoCoordinate(lat, lon);
+
+                foreach (USInterstateExit ex in exits)
+                {
+                    ClosestExit exit = new ClosestExit();
+
+                    exit.AreaName = ma.start;
+                    exit.Interstate = ma.interstate;
+                    exit.Junction = ex.Junction_ID;
+                    exit.Latitude = ex.LATITUDE;
+                    exit.Longitude = ex.LONGITUDE;
+
+                    var eCoord = new GeoCoordinate(exit.Latitude, exit.Longitude);
+
+                    exit.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
+
+                    list.Add(exit);
+                }
+            }
+
+            var last = list.OrderBy(x => x.Distance).Take(1);
+
+            ClosestExit final = last.FirstOrDefault();
+
+            return final;
+
+            
+        }
         
         
     }
