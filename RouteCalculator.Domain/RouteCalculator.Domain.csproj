@@ -49,6 +49,7 @@
     <Compile Include="Entities\Category.cs" />
     <Compile Include="Entities\CloseMajorArea.cs" />
     <Compile Include="Entities\ClosestExit.cs" />
+    <Compile Include="Entities\USInterstateCoord.cs" />
     <Compile Include="Entities\MajorAreaRouteExit.cs" />
     <Compile Include="Entities\RouteEndPoint.cs" />
     <Compile Include="Entities\RouteRhumb.cs" />

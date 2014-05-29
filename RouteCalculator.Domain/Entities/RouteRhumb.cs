@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace RouteCalculator.Domain.Entities
 {
-    public class ClosestMajorArea
+    public class RouteRhumb
     {
         [Key]
-        public string AreaName { get; set; }
-        public string ZipCode { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-        public double Distance { get; set; }
+        public string Zipcode1 { get; set; }
+        public double lat1 { get; set; }
+        public double lon1 { get; set; }
+        public string ZipCode2 { get; set; }
+        public double lat2 { get; set; }
+        public double lon2 { get; set; }
         public double Rhumb { get; set; }
-        public double ClosestExitPointDistance { get; set; }
-
+        public double Distance { get; set; }
     }
 }

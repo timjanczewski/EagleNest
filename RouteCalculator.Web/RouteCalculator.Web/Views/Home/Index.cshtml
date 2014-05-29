@@ -1,4 +1,5 @@
-﻿@{
+﻿
+@{
     ViewBag.Title = "Home Page";
 }
 
@@ -20,6 +21,11 @@
         @ViewBag.Quotes[0].Vehicle<br />
         From: @ViewBag.Quotes[0].Area1 To: @ViewBag.Quotes[0].Area2<br /> 
         Price: $@ViewBag.Quotes[0].Price<br /><br />
+
+        @{
+            
+            Response.Write(HttpUtility.HtmlDecode(ViewBag.Log));
+        }
 
 
  </div>
