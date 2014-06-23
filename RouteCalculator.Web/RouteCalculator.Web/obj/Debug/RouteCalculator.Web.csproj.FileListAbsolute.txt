@@ -87,3 +87,6 @@ C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\RouteCalcu
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\obj\Debug\RouteCalculator.Web.csprojResolveAssemblyReference.cache
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.SqlServer.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.SqlServer.xml
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.dll
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.pdb
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.xml

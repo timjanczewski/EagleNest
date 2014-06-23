@@ -36,9 +36,13 @@
     <Reference Include="EntityFramework.SqlServer">
       <HintPath>..\RouteCalculator.Web\packages\EntityFramework.6.0.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="GoogleMapsApi">
+      <HintPath>..\RouteCalculator.Web\packages\GoogleMapsApi.0.40.0.0\lib\net45\GoogleMapsApi.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,6 +53,7 @@
     <Compile Include="Entities\Category.cs" />
     <Compile Include="Entities\CloseMajorArea.cs" />
     <Compile Include="Entities\ClosestExit.cs" />
+    <Compile Include="Entities\USZipcode.cs" />
     <Compile Include="Entities\USInterstateCoord.cs" />
     <Compile Include="Entities\MajorAreaRouteExit.cs" />
     <Compile Include="Entities\RouteEndPoint.cs" />

@@ -7,3 +7,6 @@ C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.dll
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.SqlServer.dll
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.xml
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.SqlServer.xml
+C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\GoogleMapsApi.dll
+C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\GoogleMapsApi.pdb
+C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\GoogleMapsApi.xml

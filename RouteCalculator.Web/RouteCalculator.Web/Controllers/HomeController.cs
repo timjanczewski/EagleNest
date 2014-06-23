@@ -55,326 +55,391 @@ namespace RouteCalculator.Web.Controllers
             MajorArea ma2 = _db.MajorAreas.Where(x => x.Pool1Name == end.PoolName).FirstOrDefault();
             
             Quote q = new Quote();
-            if (ma1 != null && ma2 != null)
+            
+            double distance = service.DrivingDistance(zipcode1, zipcode2);
+
+            if (distance <= 200)
             {
-                Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
+                double basePrice = 0;
+                if (ma1 != null && ma2 != null && (ma1 != ma2))
+                {
+                    Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
+                    basePrice = Convert.ToDouble(baseprice.Price);
+                    sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
+                    sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
+                }
+                else
+                {
+                    basePrice = distance * .8;
+                    sb.AppendLine("Distance between points <= 200 miles.<br /> ");
+                }
                 
+                if (basePrice < 100)
+                { basePrice = 100; }
+
                 double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                double price = Convert.ToDouble(baseprice.Price) * multiplier + (150);
+                double price = Convert.ToDouble(basePrice) * multiplier + (150);
 
                 q.Vehicle = Make + " " + Model;
                 q.Area1 = zipcode1;
                 q.Area2 = zipcode2;
                 q.Price = (int)Math.Round(price, 1);
 
-                sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
-                sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
-                sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
+                
+                sb.AppendLine("Base Price: " + basePrice + "<br /> ");
                 sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
                 sb.AppendLine("Broker Fee: 150 <br /> ");
-                sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) = " + q.Price);
+                sb.AppendLine("Quote: " + basePrice + " * " + multiplier + " + 150(Broker Fee) = " + q.Price);
 
                 ViewBag.Log = sb.ToString();
             }
             else
             {
-                if (ma1 != null && ma2 == null)
+                if (ma1 != null && ma2 != null)
                 {
-                    
-                    ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == ma1.Pool1Name).FirstOrDefault(); 
-                    ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault(); 
-                    
-                    List<ClosestMajorArea> cma = GetClosestMA(endPoint.Latitude, endPoint.Longitude);
-
-                    List<MajorAreaRouteExit> mare = new List<MajorAreaRouteExit>();
-
-                    RouteRhumb or = new RouteRhumb();
-                    or.Zipcode1 = startPoint.ZipCode;
-                    or.lat1 = startPoint.Latitude;
-                    or.lon1 = startPoint.Longitude;
-                    or.ZipCode2 = endPoint.ZipCode;
-                    or.lat2 = endPoint.Latitude;
-                    or.lon2 = endPoint.Longitude;
-                    or.Rhumb = service.GetRhumbLine(or.lat1, or.lon1, or.lat2, or.lon2);
-
-                    var oCoord = new GeoCoordinate(or.lat1, or.lon1);
-                    var eCoord = new GeoCoordinate(or.lat2, or.lon2);
-
-                    or.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
-
-                    //List<RouteRhumb> rr = new List<RouteRhumb>();
-                    foreach (ClosestMajorArea c in cma)
+                    if (ma1 == ma2)
                     {
-                        //RouteRhumb r = new RouteRhumb();
+                        //ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == start.ZipCode).FirstOrDefault();
+                        USZipcode startPoint = _db.USZipcodes.Where(x => x.ZIPCode == start.ZipCode).FirstOrDefault();
 
-                        //r.Zipcode1 = startPoint.ZipCode;
-                        //r.lat1 = startPoint.Latitude;
-                        //r.lon1 = startPoint.Longitude;
-                        //r.ZipCode2 = c.ZipCode;
-                        //r.lat2 = c.Latitude;
-                        //r.lon2 = c.Longitude;
-                        //r.Rhumb = service.GetRhumbLine(r.lat1, r.lon1, r.lat2, r.lon2);
-                        //r.Distance = c.Distance;
+                        //ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault();
+                        USZipcode endPoint = _db.USZipcodes.Where(x => x.ZIPCode == end.ZipCode).FirstOrDefault();
 
-                        //rr.Add(r);
+                        double Distance = service.DrivingDistance(startPoint.ZIPCode, endPoint.ZIPCode);
 
-                        MajorAreaRouteExit exit = new MajorAreaRouteExit();
+                        double basePrice = Distance * .8;
 
-                        exit = GetRouteExits(ma1.AreaName, c.AreaName, 2);
-                        mare.Add(exit);
+                        if (basePrice < 100)
+                        { basePrice = 100; }
+
+                        double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
+                        double price = Convert.ToDouble(basePrice) * multiplier + (150);
+
+                        q.Vehicle = Make + " " + Model;
+                        q.Area1 = zipcode1;
+                        q.Area2 = zipcode2;
+                        q.Price = (int)Math.Round(price, 1);
+
+                        sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
+                        sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
+                        sb.AppendLine("Base Price: " + basePrice + "<br /> ");
+                        sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
+                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("Quote: " + basePrice + " * " + multiplier + " + 150(Broker Fee) = " + q.Price);
+
+                        ViewBag.Log = sb.ToString();
                     }
-
-                    List<ClosestExit> closestexits = new List<ClosestExit>();
-                    foreach (MajorAreaRouteExit mae in mare)
+                    else
                     {
-                        closestexits.Add(GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude));
+                        Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
+
+                        double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
+                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (150);
+
+                        q.Vehicle = Make + " " + Model;
+                        q.Area1 = zipcode1;
+                        q.Area2 = zipcode2;
+                        q.Price = (int)Math.Round(price, 1);
+
+                        sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
+                        sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
+                        sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
+                        sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
+                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) = " + q.Price);
+
+                        ViewBag.Log = sb.ToString();
                     }
-
-                    for (int i = 0; i < cma.Count(); i++)
-                    {
-                        cma[i].ClosestExitPointDistance = closestexits[i].Distance;
-                    }
-
-                    ClosestMajorArea final = (ClosestMajorArea)cma.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
-
-                    ma2 = _db.MajorAreas.Where(x => x.AreaName == final.AreaName).FirstOrDefault();
-
-                    double offroute = 0;
-
-                    if (final.ClosestExitPointDistance > 6 & final.ClosestExitPointDistance <= 50)
-                    { offroute = 50; }
-                    else if (final.ClosestExitPointDistance > 50 & final.ClosestExitPointDistance <= 100)
-                    { offroute = 100; }
-                    else if (final.ClosestExitPointDistance > 100)
-                    { offroute = 150; }
-
-                    Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
-
-                    double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                    double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + (offroute);
-
-                    q.Vehicle = Make + " " + Model;
-                    q.Area1 = zipcode1;
-                    q.Area2 = zipcode2;
-                    q.Price = (int)Math.Round(price, 1);
-
-
-                    sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
-                    sb.AppendLine("OffRoute Area 2: Closest Major Areas - " + cma[0].AreaName + ","  + cma[1].AreaName + "," + cma[2].AreaName + "<br /> ");
-                    sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
-                    sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
-                    sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
-                    sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                    sb.AppendLine("Broker Fee: 150 <br /> ");
-                    sb.AppendLine("OffRoute: " + offroute + "<br /> ");
-                    sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + offroute + " = " + q.Price);
-
-                    ViewBag.Log = sb.ToString();
-
                 }
-
-                if (ma2 != null && ma1 == null)
+                else
                 {
-                    ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == start.ZipCode).FirstOrDefault();
-                    ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == ma2.Pool1Name).FirstOrDefault();
-
-                    List<ClosestMajorArea> cma = GetClosestMA(startPoint.Latitude, startPoint.Longitude);
-
-                    List<MajorAreaRouteExit> mare = new List<MajorAreaRouteExit>();
-
-                    foreach (ClosestMajorArea c in cma)
+                    if (ma1 != null && ma2 == null)
                     {
 
-                        MajorAreaRouteExit exit = new MajorAreaRouteExit();
+                        ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == ma1.Pool1Name).FirstOrDefault();
 
-                        exit = GetRouteExits(c.AreaName, ma2.AreaName, 1);
-                        mare.Add(exit);
-                    }
+                        //ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault();
+                        USZipcode endPoint = _db.USZipcodes.Where(x => x.ZIPCode == end.ZipCode).FirstOrDefault();
 
-                    List<ClosestExit> closestexits = new List<ClosestExit>();
-                    foreach (MajorAreaRouteExit mae in mare)
-                    {
-                        closestexits.Add(GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude));
-                    }
+                        List<ClosestMajorArea> cma = GetClosestMA(endPoint.Latitude, endPoint.Longitude, ma1);
 
-                    for (int i = 0; i < cma.Count(); i++)
-                    {
-                        cma[i].ClosestExitPointDistance = closestexits[i].Distance;
-                    }
+                        List<MajorAreaRouteExit> mare = new List<MajorAreaRouteExit>();
 
-                    ClosestMajorArea final = cma.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
+                        RouteRhumb or = new RouteRhumb();
+                        or.Zipcode1 = startPoint.ZipCode;
+                        or.lat1 = startPoint.Latitude;
+                        or.lon1 = startPoint.Longitude;
+                        or.ZipCode2 = endPoint.ZIPCode;
+                        or.lat2 = endPoint.Latitude;
+                        or.lon2 = endPoint.Longitude;
+                        or.Rhumb = service.GetRhumbLine(or.lat1, or.lon1, or.lat2, or.lon2);
 
-                    ma1 = _db.MajorAreas.Where(x => x.AreaName == final.AreaName).FirstOrDefault();
+                        var oCoord = new GeoCoordinate(or.lat1, or.lon1);
+                        var eCoord = new GeoCoordinate(or.lat2, or.lon2);
 
-                    double offroute = 0;
+                        or.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
 
-                    if (final.ClosestExitPointDistance > 6 & final.ClosestExitPointDistance <= 50)
-                    { offroute = 50; }
-                    else if (final.ClosestExitPointDistance > 50 & final.ClosestExitPointDistance <= 100)
-                    { offroute = 100; }
-                    else if (final.ClosestExitPointDistance > 100)
-                    { offroute = 150; }
 
-                    Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
-
-                    double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                    double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + (offroute);
-
-                    q.Vehicle = Make + " " + Model;
-                    q.Area1 = zipcode1;
-                    q.Area2 = zipcode2;
-                    q.Price = (int)Math.Round(price, 1);
-
-                    sb.AppendLine("OffRoute Area 1: Closest Major Areas - " + cma[0].AreaName + "," + cma[1].AreaName + "," + cma[2].AreaName + "<br /> ");
-                    sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
-                    sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
-                    sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
-                    sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
-                    sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                    sb.AppendLine("Broker Fee: 150 <br /> ");
-                    sb.AppendLine("OffRoute: " + offroute + "<br /> ");
-                    sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + offroute + " = " + q.Price);
-
-                    ViewBag.Log = sb.ToString();
-                }
-
-                if (ma1 == null && ma2 == null)
-                {
-
-                    ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == start.ZipCode).FirstOrDefault();
-                    ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault();
-
-                    List<ClosestMajorArea> cma1 = GetClosestMA(startPoint.Latitude, startPoint.Longitude);
-                    List<ClosestMajorArea> cma2 = GetClosestMA(endPoint.Latitude, endPoint.Longitude);
-
-                    List<MajorAreaRouteExit> mare1 = new List<MajorAreaRouteExit>();
-                    List<MajorAreaRouteExit> mare2 = new List<MajorAreaRouteExit>();
-
-                    foreach (ClosestMajorArea c1 in cma1)
-                    {
-
-                        MajorAreaRouteExit exit = new MajorAreaRouteExit();
-
-                        foreach (ClosestMajorArea c2 in cma2)
+                        //Get Major Area Exits//
+                        foreach (ClosestMajorArea c in cma)
                         {
-                            exit = GetRouteExits(c1.AreaName, c2.AreaName, 0);
-                            mare1.Add(exit);
+
+                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                            exit = GetRouteExits(ma1.AreaName, c.AreaName, 2);
+                            mare.Add(exit);
+
                         }
+
+                        List<ClosestExit> closestexits = new List<ClosestExit>();
+                        foreach (MajorAreaRouteExit mae in mare)
+                        {
+                            closestexits.Add(GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude));
+                        }
+
+                        for (int i = 0; i < cma.Count(); i++)
+                        {
+
+                            cma[i].ClosestExitPointDistance = closestexits[i].Distance;
+
+                        }
+
+                        ClosestMajorArea final = (ClosestMajorArea)cma.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
+
+                        ma2 = _db.MajorAreas.Where(x => x.AreaName == final.AreaName).FirstOrDefault();
+
+                        double offroute = 0;
+
+                        if (final.ClosestExitPointDistance > 6 & final.ClosestExitPointDistance <= 50)
+                        { offroute = 50; }
+                        else if (final.ClosestExitPointDistance > 50 & final.ClosestExitPointDistance <= 100)
+                        { offroute = 100; }
+                        else if (final.ClosestExitPointDistance > 100)
+                        { offroute = 150; }
+
+                        Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
+
+                        double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
+                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + (offroute);
+
+                        q.Vehicle = Make + " " + Model;
+                        q.Area1 = zipcode1;
+                        q.Area2 = zipcode2;
+                        q.Price = (int)Math.Round(price, 1);
+
+
+                        sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
+                        sb.AppendLine("OffRoute Area 2: Closest Major Areas - " + cma[0].AreaName + "," + cma[1].AreaName + "," + cma[2].AreaName + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
+                        sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
+                        sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
+                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("OffRoute: " + offroute + "<br /> ");
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + offroute + " = " + q.Price);
+
+                        ViewBag.Log = sb.ToString();
+
                     }
 
-                    List<ClosestExit> closestexits = new List<ClosestExit>();
-                    foreach (MajorAreaRouteExit mae in mare1)
+                    if (ma2 != null && ma1 == null)
                     {
-                        closestexits.Add(GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude));
+                        //ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == start.ZipCode).FirstOrDefault();
+                        USZipcode startPoint = _db.USZipcodes.Where(x => x.ZIPCode == start.ZipCode).FirstOrDefault();
+                        ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == ma2.Pool1Name).FirstOrDefault();
+
+                        List<ClosestMajorArea> cma = GetClosestMA(startPoint.Latitude, startPoint.Longitude, ma2);
+
+                        List<MajorAreaRouteExit> mare = new List<MajorAreaRouteExit>();
+
+                        foreach (ClosestMajorArea c in cma)
+                        {
+
+                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                            exit = GetRouteExits(c.AreaName, ma2.AreaName, 1);
+                            mare.Add(exit);
+                        }
+
+                        List<ClosestExit> closestexits = new List<ClosestExit>();
+                        foreach (MajorAreaRouteExit mae in mare)
+                        {
+                            closestexits.Add(GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude));
+                        }
+
+                        for (int i = 0; i < cma.Count(); i++)
+                        {
+                            cma[i].ClosestExitPointDistance = closestexits[i].Distance;
+                        }
+
+                        ClosestMajorArea final = cma.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
+
+                        ma1 = _db.MajorAreas.Where(x => x.AreaName == final.AreaName).FirstOrDefault();
+
+                        double offroute = 0;
+
+                        if (final.ClosestExitPointDistance > 6 & final.ClosestExitPointDistance <= 50)
+                        { offroute = 50; }
+                        else if (final.ClosestExitPointDistance > 50 & final.ClosestExitPointDistance <= 100)
+                        { offroute = 100; }
+                        else if (final.ClosestExitPointDistance > 100)
+                        { offroute = 150; }
+
+                        Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
+
+                        double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
+                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + (offroute);
+
+                        q.Vehicle = Make + " " + Model;
+                        q.Area1 = zipcode1;
+                        q.Area2 = zipcode2;
+                        q.Price = (int)Math.Round(price, 1);
+
+                        sb.AppendLine("OffRoute Area 1: Closest Major Areas - " + cma[0].AreaName + "," + cma[1].AreaName + "," + cma[2].AreaName + "<br /> ");
+                        sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
+                        sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
+                        sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
+                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("OffRoute: " + offroute + "<br /> ");
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + offroute + " = " + q.Price);
+
+                        ViewBag.Log = sb.ToString();
                     }
 
-                   
-                    List<ClosestExit> ce1 = new List<ClosestExit>();
-                    List<ClosestExit> ce2 = new List<ClosestExit>();
-                    List<ClosestExit> ce3 = new List<ClosestExit>();
-
-                    ce1.Add(closestexits[0]);
-                    ce1.Add(closestexits[1]);
-                    ce1.Add(closestexits[2]);
-
-                    ce2.Add(closestexits[3]);
-                    ce2.Add(closestexits[4]);
-                    ce2.Add(closestexits[5]);
-
-                    ce3.Add(closestexits[6]);
-                    ce3.Add(closestexits[7]);
-                    ce3.Add(closestexits[8]);
-
-                    cma1[0].ClosestExitPointDistance = ce1.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
-                    cma1[1].ClosestExitPointDistance = ce2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
-                    cma1[2].ClosestExitPointDistance = ce3.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
-                    
-                    ClosestMajorArea final1 = cma1.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
-
-                    ma1 = _db.MajorAreas.Where(x => x.AreaName == final1.AreaName).FirstOrDefault();
-
-                    double offroute1 = 0;
-
-                    if (final1.ClosestExitPointDistance > 6 & final1.ClosestExitPointDistance <= 50)
-                    { offroute1 = 50; }
-                    else if (final1.ClosestExitPointDistance > 50 & final1.ClosestExitPointDistance <= 100)
-                    { offroute1 = 100; }
-                    else if (final1.ClosestExitPointDistance > 100)
-                    { offroute1 = 150; }
-
-
-                    //// GET MAJOR AREA 2 CLOSEST EXIT POINTS ////
-                    for (int i = 0; i < cma2.Count(); i++)
+                    if (ma1 == null && ma2 == null)
                     {
-                        MajorAreaRouteExit exit = new MajorAreaRouteExit();
+                        //ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == start.ZipCode).FirstOrDefault();
+                        USZipcode startPoint = _db.USZipcodes.Where(x => x.ZIPCode == start.ZipCode).FirstOrDefault();
 
-                        exit = GetRouteExits(final1.AreaName, cma2[i].AreaName, 2);
-                        mare2.Add(exit);
+                        //ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault();
+                        USZipcode endPoint = _db.USZipcodes.Where(x => x.ZIPCode == end.ZipCode).FirstOrDefault();
+
+                        MajorArea blank = new MajorArea();
+                        List<ClosestMajorArea> cma1 = GetClosestMA(startPoint.Latitude, startPoint.Longitude, blank);
+                        List<ClosestMajorArea> cma2 = GetClosestMA(endPoint.Latitude, endPoint.Longitude, cma1);
+
+                        List<MajorAreaRouteExit> mare1 = new List<MajorAreaRouteExit>();
+                        List<MajorAreaRouteExit> mare2 = new List<MajorAreaRouteExit>();
+
+                        foreach (ClosestMajorArea c1 in cma1)
+                        {
+
+                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                            foreach (ClosestMajorArea c2 in cma2)
+                            {
+                                exit = GetRouteExits(c1.AreaName, c2.AreaName, 0);
+                                mare1.Add(exit);
+                            }
+                        }
+
+                        List<ClosestExit> closestexits = new List<ClosestExit>();
+                        foreach (MajorAreaRouteExit mae in mare1)
+                        {
+                            closestexits.Add(GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude));
+                        }
+
+
+                        List<ClosestExit> ce1 = new List<ClosestExit>();
+                        List<ClosestExit> ce2 = new List<ClosestExit>();
+                        List<ClosestExit> ce3 = new List<ClosestExit>();
+
+                        ce1.Add(closestexits[0]);
+                        ce1.Add(closestexits[1]);
+                        ce1.Add(closestexits[2]);
+
+                        ce2.Add(closestexits[3]);
+                        ce2.Add(closestexits[4]);
+                        ce2.Add(closestexits[5]);
+
+                        ce3.Add(closestexits[6]);
+                        ce3.Add(closestexits[7]);
+                        ce3.Add(closestexits[8]);
+
+                        cma1[0].ClosestExitPointDistance = ce1.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+                        cma1[1].ClosestExitPointDistance = ce2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+                        cma1[2].ClosestExitPointDistance = ce3.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+
+                        ClosestMajorArea final1 = cma1.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
+
+                        ma1 = _db.MajorAreas.Where(x => x.AreaName == final1.AreaName).FirstOrDefault();
+
+                        double offroute1 = 0;
+
+                        if (final1.ClosestExitPointDistance > 6 & final1.ClosestExitPointDistance <= 50)
+                        { offroute1 = 50; }
+                        else if (final1.ClosestExitPointDistance > 50 & final1.ClosestExitPointDistance <= 100)
+                        { offroute1 = 100; }
+                        else if (final1.ClosestExitPointDistance > 100)
+                        { offroute1 = 150; }
+
+
+                        //// GET MAJOR AREA 2 CLOSEST EXIT POINTS ////
+                        for (int i = 0; i < cma2.Count(); i++)
+                        {
+                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                            exit = GetRouteExits(final1.AreaName, cma2[i].AreaName, 2);
+                            mare2.Add(exit);
+                        }
+
+
+                        List<ClosestExit> closestexits2 = new List<ClosestExit>();
+                        foreach (MajorAreaRouteExit mae in mare2)
+                        {
+                            closestexits2.Add(GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude));
+                        }
+
+                        for (int i = 0; i < cma2.Count(); i++)
+                        {
+                            cma2[i].ClosestExitPointDistance = closestexits2[i].Distance;
+                        }
+
+                        ClosestMajorArea final2 = (ClosestMajorArea)cma2.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
+
+                        ma2 = _db.MajorAreas.Where(x => x.AreaName == final2.AreaName).FirstOrDefault();
+
+                        double offroute2 = 0;
+
+                        if (final2.ClosestExitPointDistance > 6 & final2.ClosestExitPointDistance <= 50)
+                        { offroute1 = 50; }
+                        else if (final2.ClosestExitPointDistance > 50 & final2.ClosestExitPointDistance <= 100)
+                        { offroute2 = 100; }
+                        else if (final2.ClosestExitPointDistance > 100)
+                        { offroute2 = 150; }
+
+                        Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
+
+                        double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
+                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + (offroute1) + (offroute2);
+
+                        q.Vehicle = Make + " " + Model;
+                        q.Area1 = zipcode1;
+                        q.Area2 = zipcode2;
+                        q.Price = (int)Math.Round(price, 1);
+
+                        sb.AppendLine("OffRoute Area 1: Closest Major Areas - " + cma1[0].AreaName + "," + cma1[1].AreaName + "," + cma1[2].AreaName + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("OffRoute Area 2: Closest Major Areas - " + cma2[0].AreaName + "," + cma2[1].AreaName + "," + cma2[2].AreaName + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
+                        sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
+                        sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
+                        sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
+                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("OffRoute1: " + offroute1 + "<br /> ");
+                        sb.AppendLine("OffRoute2: " + offroute1 + "<br /> ");
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + offroute1 + " + " + offroute2 + " = " + q.Price);
+
+                        ViewBag.Log = sb.ToString();
+
                     }
 
-
-                    List<ClosestExit> closestexits2 = new List<ClosestExit>();
-                    foreach (MajorAreaRouteExit mae in mare2)
-                    {
-                        closestexits2.Add(GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude));
-                    }
-
-                    for (int i = 0; i < cma2.Count(); i++)
-                    {
-                        cma2[i].ClosestExitPointDistance = closestexits2[i].Distance;
-                    }
-
-                    ClosestMajorArea final2 = (ClosestMajorArea)cma2.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
-
-                    ma2 = _db.MajorAreas.Where(x => x.AreaName == final2.AreaName).FirstOrDefault();
-
-                    double offroute2 = 0;
-
-                    if (final2.ClosestExitPointDistance > 6 & final2.ClosestExitPointDistance <= 50)
-                    { offroute1 = 50; }
-                    else if (final2.ClosestExitPointDistance > 50 & final2.ClosestExitPointDistance <= 100)
-                    { offroute2 = 100; }
-                    else if (final2.ClosestExitPointDistance > 100)
-                    { offroute2 = 150; }
-
-                    Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
-
-                    double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                    double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + (offroute1) + (offroute2);
-
-                    q.Vehicle = Make + " " + Model;
-                    q.Area1 = zipcode1;
-                    q.Area2 = zipcode2;
-                    q.Price = (int)Math.Round(price, 1);
-
-                    sb.AppendLine("OffRoute Area 1: Closest Major Areas - " + cma1[0].AreaName + "," + cma1[1].AreaName + "," + cma1[2].AreaName + "<br /> ");
-                    sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
-                    sb.AppendLine("OffRoute Area 2: Closest Major Areas - " + cma2[0].AreaName + "," + cma2[1].AreaName + "," + cma2[2].AreaName + "<br /> ");
-                    sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
-                    sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
-                    sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
-                    sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
-                    sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                    sb.AppendLine("Broker Fee: 150 <br /> ");
-                    sb.AppendLine("OffRoute1: " + offroute1 + "<br /> ");
-                    sb.AppendLine("OffRoute2: " + offroute1 + "<br /> ");
-                    sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + offroute1 + " + " + offroute2 + " = " + q.Price);
-
-                    ViewBag.Log = sb.ToString();
-                
                 }
-                
-                
-                
-
-                            
-            
             }
-            
-            
-            
-            
-            
+                        
             List<Vehicle> vehicles = service.GetVehicles();
             List<string> Makes = new List<string>();
             foreach (Vehicle v in vehicles)
@@ -468,7 +533,7 @@ namespace RouteCalculator.Web.Controllers
 
         }
 
-        public List<ClosestMajorArea> GetClosestMA(double oLat, double oLong)
+        public List<ClosestMajorArea> GetClosestMA(double oLat, double oLong, MajorArea majorarea)
         {
             List<ClosestMajorArea> list = new List<ClosestMajorArea>();
 
@@ -476,33 +541,80 @@ namespace RouteCalculator.Web.Controllers
 
             var ma = _db.MajorAreas;
 
-            foreach (MajorArea m in ma)
+            if (majorarea != null)
             {
-                try
+
+                foreach (MajorArea m in ma)
                 {
-                    ZipcodePoolsPivotPoint z = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == m.Pool1Name && x.State == m.Pool1State).FirstOrDefault();
+                    try
+                    {
+                        ZipcodePoolsPivotPoint z = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == m.Pool1Name && x.State == m.Pool1State).FirstOrDefault();
 
-                    ClosestMajorArea cma = new ClosestMajorArea();
-                    cma.AreaName = m.AreaName;
-                    cma.ZipCode = z.ZipCode;
-                    cma.Latitude = z.Latitude;
-                    cma.Longitude = z.Longitude;
+                        ClosestMajorArea cma = new ClosestMajorArea();
+                        cma.AreaName = m.AreaName;
+                        cma.ZipCode = z.ZipCode;
+                        cma.Latitude = z.Latitude;
+                        cma.Longitude = z.Longitude;
 
-                    var maCoord = new GeoCoordinate(cma.Latitude, cma.Longitude);
+                        var maCoord = new GeoCoordinate(cma.Latitude, cma.Longitude);
 
-                    cma.Distance = (oCoord.GetDistanceTo(maCoord) * 3.28084) / 5280;
+                        cma.Distance = (oCoord.GetDistanceTo(maCoord) * 3.28084) / 5280;
 
-                    list.Add(cma);
+                        list.Add(cma);
+                    }
+                    catch { }
                 }
-                catch { }
-            }
 
-            list = list.OrderBy(x => x.Distance).Take(3).ToList();
+                list = list.Where(x => x.AreaName != majorarea.AreaName).ToList();
+                list = list.OrderBy(x => x.Distance).Take(3).ToList();
+            }
 
 
 
             return list;
         }
+
+        public List<ClosestMajorArea> GetClosestMA(double oLat, double oLong, List<ClosestMajorArea> majorarea)
+        {
+            List<ClosestMajorArea> list = new List<ClosestMajorArea>();
+
+            var oCoord = new GeoCoordinate(oLat, oLong);
+
+            var ma = _db.MajorAreas;
+
+            if (majorarea != null)
+            {
+
+                foreach (MajorArea m in ma)
+                {
+                    try
+                    {
+                        ZipcodePoolsPivotPoint z = _db.ZipcodePoolsPivotPoints.Where(x => x.PoolName == m.Pool1Name && x.State == m.Pool1State).FirstOrDefault();
+
+                        ClosestMajorArea cma = new ClosestMajorArea();
+                        cma.AreaName = m.AreaName;
+                        cma.ZipCode = z.ZipCode;
+                        cma.Latitude = z.Latitude;
+                        cma.Longitude = z.Longitude;
+
+                        var maCoord = new GeoCoordinate(cma.Latitude, cma.Longitude);
+
+                        cma.Distance = (oCoord.GetDistanceTo(maCoord) * 3.28084) / 5280;
+
+                        list.Add(cma);
+                    }
+                    catch { }
+                }
+
+                list = list.Where(x => x.AreaName != majorarea[0].AreaName && x.AreaName != majorarea[1].AreaName && x.AreaName != majorarea[2].AreaName).ToList();
+                list = list.OrderBy(x => x.Distance).Take(3).ToList();
+            }
+
+
+
+            return list;
+        }
+
         public ClosestExit GetClosestExit(MajorAreaRouteExit ma, double lat, double lon)
         {
             var routeexits = _db.MajorAreaRouteExits.Where(x => x.start == ma.start && x.finish == ma.finish);
@@ -515,14 +627,32 @@ namespace RouteCalculator.Web.Controllers
                 int eFrom = Convert.ToInt32(m.Exit_from);
                 int eTo = Convert.ToInt32(m.Exit_to);
 
-                var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID == m.interstate);
-                                
-                var oCoord = new GeoCoordinate(lat, lon);
-
-                foreach (USInterstateExit ex in exits)
+                if ((eFrom == 0 && eTo == 0) && ma.interstate == null)
                 {
-                    if (Convert.ToInt32(ex.Junction_ID) >= eFrom && Convert.ToInt32(ex.Junction_ID) <= eTo)
+                    ClosestExit exit = new ClosestExit();
+
+                    exit.AreaName = null;
+                    exit.Interstate = null;
+                    exit.Junction = null;
+                    exit.Latitude = 0;
+                    exit.Longitude = 0;
+
+                    //var eCoord = new GeoCoordinate(exit.Latitude, exit.Longitude);
+
+                    exit.Distance = 1000;
+
+
+                    list.Add(exit);
+                }
+                else if ((eFrom == 0 && eTo == 0) && ma.interstate != null)
+                {
+                    var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID == m.interstate);
+
+                    var oCoord = new GeoCoordinate(lat, lon);
+
+                    foreach (USInterstateExit ex in exits)
                     {
+                        
                         ClosestExit exit = new ClosestExit();
 
                         exit.AreaName = ma.start;
@@ -537,8 +667,38 @@ namespace RouteCalculator.Web.Controllers
 
 
                         list.Add(exit);
+
                     }
-                   
+
+                }
+                else
+                {
+
+                    var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID == m.interstate);
+
+                    var oCoord = new GeoCoordinate(lat, lon);
+
+                    foreach (USInterstateExit ex in exits)
+                    {
+                        if (Convert.ToInt32(ex.Junction_ID) >= eFrom && Convert.ToInt32(ex.Junction_ID) <= eTo)
+                        {
+                            ClosestExit exit = new ClosestExit();
+
+                            exit.AreaName = ma.start;
+                            exit.Interstate = m.interstate;
+                            exit.Junction = ex.Junction_ID;
+                            exit.Latitude = ex.LATITUDE;
+                            exit.Longitude = ex.LONGITUDE;
+
+                            var eCoord = new GeoCoordinate(exit.Latitude, exit.Longitude);
+
+                            exit.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
+
+
+                            list.Add(exit);
+                        }
+
+                    }
                 }
             }
 
@@ -549,6 +709,55 @@ namespace RouteCalculator.Web.Controllers
             return final;
 
             
+        }
+
+        //public double GetZiptoZipDistance(ZipcodePool start, ZipcodePool end)
+        //{
+        //    //Check length of Zip to Zip
+        //    //ZipcodePoolsPivotPoint startPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == start.ZipCode).FirstOrDefault();
+        //    USZipcode startPoint = _db.USZipcodes.Where(x => x.ZIPCode == start.ZipCode).FirstOrDefault();
+
+        //    //ZipcodePoolsPivotPoint endPoint = _db.ZipcodePoolsPivotPoints.Where(x => x.ZipCode == end.ZipCode).FirstOrDefault();
+        //    USZipcode endPoint = _db.USZipcodes.Where(x => x.ZIPCode == end.ZipCode).FirstOrDefault();
+
+        //    var oCoord = new GeoCoordinate(startPoint.Latitude, startPoint.Longitude);
+        //    var eCoord = new GeoCoordinate(endPoint.Latitude, endPoint.Longitude);
+
+            
+        //    double Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
+
+        //    return Distance;
+        //}
+
+        public void TestZips()
+        {
+            List<ZipcodePool> zips1 = _db.ZipcodePools.ToList();
+            List<ZipcodePool> zips2 = _db.ZipcodePools.ToList();
+
+            //foreach (ZipcodePool zp1 in zips1)
+            //{
+                //string z1 = zp1.ZipCode;
+                string z1 = "66523";
+
+                foreach (ZipcodePool zp2 in zips2)
+                {
+                    string z2 = zp2.ZipCode;
+                    try
+                    {
+                        if (z1 != z2)
+                        {
+                            GetPrice(z1, z2, "Acura | CL");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        //System.IO.File.WriteAllText(@"C:\Projects\EagleTrucking\logs\" + z1 + "-" + z2 + ".txt", zp1.City + " " + zp1.State + " - " + zp2.City + " " + zp2.State + "\r\n" +  ex.ToString());
+                        System.IO.File.WriteAllText(@"C:\Projects\EagleTrucking\logs\" + z1 + "-" + z2 + ".txt", "Osage City KS - " + zp2.City + " " + zp2.State + "\r\n" + ex.ToString());
+                    }
+                }
+
+            //}
+
         }
         
         
