@@ -36,5 +36,22 @@ namespace RouteCalculator.Domain.Services
             return (ToDegrees(radians) + 360) % 360;
         }
 
+        public void GetRhumb()
+        {
+            //RouteRhumb or = new RouteRhumb();
+            //or.Zipcode1 = startPoint.ZipCode;
+            //or.lat1 = startPoint.Latitude;
+            //or.lon1 = startPoint.Longitude;
+            //or.ZipCode2 = endPoint.ZIPCode;
+            //or.lat2 = endPoint.Latitude;
+            //or.lon2 = endPoint.Longitude;
+            //or.Rhumb = service.GetRhumbLine(or.lat1, or.lon1, or.lat2, or.lon2);
+
+            //var oCoord = new GeoCoordinate(or.lat1, or.lon1);
+            //var eCoord = new GeoCoordinate(or.lat2, or.lon2);
+
+            //or.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
+        }
+
     }
 }

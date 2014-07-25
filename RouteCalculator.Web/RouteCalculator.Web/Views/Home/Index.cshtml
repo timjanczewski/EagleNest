@@ -9,15 +9,20 @@
         
         @Html.Label("Make and Model:")
         @Html.DropDownList("vehicle", ViewData["MakesModels"] as SelectList)<br />
-        @Html.Label("Zipcode From:")
-        @Html.TextBox("zipcode1", 35201)<br />
-        @Html.Label("Zipcode To:")
-        @Html.TextBox("zipcode2", 90210)<br />
-        <input type="submit" value="Get Quotes" /> 
+        @Html.Label("From:")
+        @Html.TextBox("Address1", "From Address or Zip code")<br />
+        @Html.Label("To:")
+        @Html.TextBox("Address2", "To Address or Zip code")<br />
+        <input type="submit" value="Get Quotes" />
+        
+        if(ViewBag.Message != null)
+        {
+            <label>@ViewBag.Message</label>
+        } 
     }
 
 <div>
-   
+    
         @ViewBag.Quotes[0].Vehicle<br />
         From: @ViewBag.Quotes[0].Area1 To: @ViewBag.Quotes[0].Area2<br /> 
         Price: $@ViewBag.Quotes[0].Price<br /><br />

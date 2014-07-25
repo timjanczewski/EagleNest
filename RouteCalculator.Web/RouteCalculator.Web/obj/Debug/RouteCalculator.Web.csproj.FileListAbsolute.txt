@@ -89,4 +89,3 @@ C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFram
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.SqlServer.xml
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.pdb
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.xml

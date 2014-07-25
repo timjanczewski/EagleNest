@@ -110,10 +110,14 @@ namespace RouteCalculator.Domain.Services
         {
             double finaldistance = 0;
 
+                  
+
             var drivingDistance = new DirectionsRequest
             {
                 Origin = zip1,
-                Destination = zip2
+                Destination = zip2,
+                Avoid = AvoidWay.Ferries
+                
             };
 
             List<double> distances = new List<double>();
@@ -123,9 +127,12 @@ namespace RouteCalculator.Domain.Services
             foreach (var route in directionsResponse.Routes)
             {
                 double distance = 0;
+
+                string[] warnings = route.Warnings;
                 
                 foreach (var l in route.Legs)
                 {
+     
                     distance = distance + l.Distance.Value;
                 }
 

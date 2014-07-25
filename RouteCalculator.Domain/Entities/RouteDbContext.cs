@@ -29,6 +29,7 @@ namespace RouteCalculator.Domain.Entities
         public DbSet<USInterstateExit> USInterstateExits { get; set; }
         public DbSet<USInterstateCoord> USInterstateCoords { get; set; }
         public DbSet<USZipcode> USZipcodes { get; set; }
+        public DbSet<MajorAreaCoord> MajorAreaCoords { get; set; }
         
     }
 }

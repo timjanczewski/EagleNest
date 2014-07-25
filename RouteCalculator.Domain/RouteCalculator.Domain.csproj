@@ -36,9 +36,6 @@
     <Reference Include="EntityFramework.SqlServer">
       <HintPath>..\RouteCalculator.Web\packages\EntityFramework.6.0.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="GoogleMapsApi">
-      <HintPath>..\RouteCalculator.Web\packages\GoogleMapsApi.0.40.0.0\lib\net45\GoogleMapsApi.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -53,6 +50,7 @@
     <Compile Include="Entities\Category.cs" />
     <Compile Include="Entities\CloseMajorArea.cs" />
     <Compile Include="Entities\ClosestExit.cs" />
+    <Compile Include="Entities\MajorAreaCoord.cs" />
     <Compile Include="Entities\USZipcode.cs" />
     <Compile Include="Entities\USInterstateCoord.cs" />
     <Compile Include="Entities\MajorAreaRouteExit.cs" />
@@ -73,6 +71,12 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\google-maps-master\GoogleMapsApi\GoogleMapsApi.csproj">
+      <Project>{61e9fc82-47b0-43c3-8749-95d3a9967060}</Project>
+      <Name>GoogleMapsApi</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
