@@ -80,8 +80,10 @@ namespace RouteCalculator.Web.Controllers
             
             Quote q = new Quote();
             
+            //GET DISTANCE FROM START TO END POINT
             double distance = service.DrivingDistance(startPoint.ZIPCode, endPoint.ZIPCode);
 
+            //IF DISTANCE IS LESS THAN OR EQUAL TO 200 
             if (distance <= 200)
             {
                 double basePrice = 0;
@@ -117,6 +119,8 @@ namespace RouteCalculator.Web.Controllers
 
                 ViewBag.Log = sb.ToString();
             }
+            
+            //IF DISTANCE IS GREATER THAN 200
             else
             {
                 if (ma1 != null && ma2 != null)
@@ -190,7 +194,7 @@ namespace RouteCalculator.Web.Controllers
 
                         double startdistance = startdiff * 2 * multiplier;
                         double enddistance = enddiff * 2 * multiplier;
-                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + startdistance + enddistance;
+                        double price = Convert.ToDouble(baseprice.Price) * multiplier + startdistance + enddistance + (150);
 
                         q.Vehicle = Make + " " + Model;
                         q.Area1 = address1;
@@ -282,7 +286,7 @@ namespace RouteCalculator.Web.Controllers
 
                         double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
                         double startdistance = startdiff * 2 * multiplier;
-                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + startdistance + (offroute * multiplier);
+                        double price = (Convert.ToDouble(baseprice.Price) + offroute) * multiplier + startdistance + (150);
 
                         q.Vehicle = Make + " " + Model;
                         q.Area1 = address1;
@@ -298,8 +302,8 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
                         sb.AppendLine("Broker Fee: 150 <br /> ");
                         sb.AppendLine("OffRoute Major Area 1 Distance:" + startdiff + " * 2 * " + multiplier + " = " + startdistance + "<br /> ");
-                        sb.AppendLine("OffRoute: " + offroute + "<br /> ");
-                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " " + startdistance + " + 150(Broker Fee) + " + offroute + " = " + q.Price);
+                        sb.AppendLine("OffRoute * Multiplier: " + (offroute * multiplier) + "<br /> ");
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + startdistance + " + 150(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
 
@@ -382,8 +386,8 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
                         sb.AppendLine("Broker Fee: 150 <br /> ");
                         sb.AppendLine("OffRoute Major Area 2 Distance:" + enddiff + " * 2 * " + multiplier + " = " + enddistance + "<br /> ");
-                        sb.AppendLine("OffRoute: " + offroute + "<br /> ");
-                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " " + enddistance + " + 150(Broker Fee) + " + offroute + " = " + q.Price);
+                        sb.AppendLine("OffRoute * Multiplier: " + (offroute * multiplier) + "<br /> ");
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + enddistance + " + 150(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
                     }
@@ -504,9 +508,9 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
                         sb.AppendLine("Broker Fee: 150 <br /> ");
-                        sb.AppendLine("OffRoute1: " + offroute1 + "<br /> ");
-                        sb.AppendLine("OffRoute2: " + offroute1 + "<br /> ");
-                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + offroute1 + " + " + offroute2 + " = " + q.Price);
+                        sb.AppendLine("OffRoute1 * Multiplier: " + (offroute1 * multiplier) + "<br /> ");
+                        sb.AppendLine("OffRoute2 * Multiplier: " + (offroute2 * multiplier) + "<br /> ");
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + (offroute1 * multiplier) + " + " + (offroute2 * multiplier) + " = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
 
@@ -833,13 +837,11 @@ namespace RouteCalculator.Web.Controllers
 
             MajorAreaCoord maCoords = _db.MajorAreaCoords.Where(x => x.MajorArea == ma.AreaName).FirstOrDefault();
 
-            if (point.StateAbbr != maCoords.State)
-            {
-                var oCoord = new GeoCoordinate(point.Latitude, point.Longitude);
-                var eCoord = new GeoCoordinate(maCoords.Latitude, maCoords.Longitude);
+            var oCoord = new GeoCoordinate(point.Latitude, point.Longitude);
+            var eCoord = new GeoCoordinate(maCoords.Latitude, maCoords.Longitude);
 
-                distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
-            }
+            distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
+            
 
             return distance;
         }
