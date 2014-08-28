@@ -1,12 +1,12 @@
+C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\RouteCalculator.Domain.dll.config
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\RouteCalculator.Domain.dll
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\RouteCalculator.Domain.pdb
-C:\Projects\EagleTrucking\RouteCalculator.Domain\obj\Debug\RouteCalculator.Domain.dll
-C:\Projects\EagleTrucking\RouteCalculator.Domain\obj\Debug\RouteCalculator.Domain.pdb
-C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\RouteCalculator.Domain.dll.config
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.dll
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.SqlServer.dll
-C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.xml
-C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.SqlServer.xml
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\GoogleMapsApi.dll
 C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\GoogleMapsApi.pdb
+C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.xml
+C:\Projects\EagleTrucking\RouteCalculator.Domain\bin\Debug\EntityFramework.SqlServer.xml
 C:\Projects\EagleTrucking\RouteCalculator.Domain\obj\Debug\RouteCalculator.Domain.csprojResolveAssemblyReference.cache
+C:\Projects\EagleTrucking\RouteCalculator.Domain\obj\Debug\RouteCalculator.Domain.dll
+C:\Projects\EagleTrucking\RouteCalculator.Domain\obj\Debug\RouteCalculator.Domain.pdb

@@ -14,7 +14,7 @@ namespace RouteCalculator.Domain.Entities
         public int Id { get; set; }
         public string STATE { get; set; }
         public string HIGHWAY_ID { get; set; }
-        public string Junction_ID { get; set; }
+        public int Junction_ID { get; set; }
         public double LATITUDE { get; set; }
         public double LONGITUDE { get; set; }
 

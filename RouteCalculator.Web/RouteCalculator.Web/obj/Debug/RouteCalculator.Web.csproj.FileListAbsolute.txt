@@ -8,12 +8,14 @@ C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\DotNetOpen
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\DotNetOpenAuth.OpenId.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\DotNetOpenAuth.OpenId.RelyingParty.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.dll
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.SqlServer.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Microsoft.Data.Edm.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Microsoft.Data.OData.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Microsoft.Web.Infrastructure.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Microsoft.Web.Mvc.FixedDisplayModes.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Microsoft.Web.WebPages.OAuth.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Newtonsoft.Json.dll
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\RouteCalculator.Domain.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Net.Http.Formatting.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Spatial.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Web.Helpers.dll
@@ -29,7 +31,10 @@ C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Web
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\WebGrease.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\WebMatrix.Data.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\WebMatrix.WebData.dll
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.dll
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\RouteCalculator.Domain.pdb
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.xml
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.SqlServer.xml
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Newtonsoft.Json.xml
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Net.Http.Formatting.xml
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Web.Helpers.xml
@@ -53,6 +58,7 @@ C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Web
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Microsoft.Data.Edm.xml
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\Microsoft.Data.OData.xml
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\System.Spatial.xml
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.pdb
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\de\Microsoft.Data.Edm.resources.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\es\Microsoft.Data.Edm.resources.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\fr\Microsoft.Data.Edm.resources.dll
@@ -80,12 +86,6 @@ C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\ko\System.
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\ru\System.Spatial.resources.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\zh-Hans\System.Spatial.resources.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\zh-Hant\System.Spatial.resources.dll
+C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\obj\Debug\RouteCalculator.Web.csprojResolveAssemblyReference.cache
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\obj\Debug\RouteCalculator.Web.dll
 C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\obj\Debug\RouteCalculator.Web.pdb
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\RouteCalculator.Domain.dll
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\RouteCalculator.Domain.pdb
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\obj\Debug\RouteCalculator.Web.csprojResolveAssemblyReference.cache
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.SqlServer.dll
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\EntityFramework.SqlServer.xml
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.dll
-C:\Projects\EagleTrucking\RouteCalculator.Web\RouteCalculator.Web\bin\GoogleMapsApi.pdb

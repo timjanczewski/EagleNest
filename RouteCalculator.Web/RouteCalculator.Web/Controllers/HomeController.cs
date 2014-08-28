@@ -154,37 +154,40 @@ namespace RouteCalculator.Web.Controllers
                     else
                     {
                         double startdiff = 0;
-                        if (GetDistanceToMAover30(startPoint, ma1) > 30)
+                        double distance1 = GetDistanceToMAover30(startPoint, ma1);
+                        string OffRouteMA1Exit = string.Empty;
+                        if (distance1 > 30)
                         {
                             MajorAreaRouteExit exit = new MajorAreaRouteExit();
-                            exit = GetRouteExits(ma1.AreaName, ma2.AreaName, 2);
+                            exit = GetRouteEndingAreaExit(ma1.AreaName, ma2.AreaName, 1, 99);
 
                             ClosestExit ce = GetClosestExit(exit, startPoint.Latitude, startPoint.Longitude);
+                            
+                            if (ce.Distance > 10 && ce.Distance < distance1)
+                            { startdiff = distance1 - ce.Distance; }
+                            else
+                            { startdiff = ce.Distance; }
 
-                            if (ce.Distance > 30)
-                            {
-                                if (ce.Distance - 30 > 10)
-                                {
-                                    startdiff = ce.Distance - 30;
-                                }
-                            }
+                            OffRouteMA1Exit = ce.State + " " + ce.Interstate + " " + ce.Junction + " Distance: " + ce.Distance;
 
                         }
                         double enddiff = 0;
-                        if (GetDistanceToMAover30(endPoint, ma2) > 30)
+                        double distance2 = GetDistanceToMAover30(endPoint, ma2);
+                        string OffRouteMA2Exit = string.Empty;
+                        if (distance2 > 30)
                         {
                             MajorAreaRouteExit exit = new MajorAreaRouteExit();
-                            exit = GetRouteExits(ma1.AreaName, ma2.AreaName, 2);
+                            exit = GetRouteEndingAreaExit(ma1.AreaName, ma2.AreaName, 2, 99);
 
                             ClosestExit ce = GetClosestExit(exit, endPoint.Latitude, endPoint.Longitude);
 
-                            if (ce.Distance > 30)
-                            {
-                                if (ce.Distance - 30 > 10)
-                                {
-                                    enddiff = ce.Distance - 30;
-                                }
-                            }
+                            if (ce.Distance > 10 && ce.Distance < distance2)
+                            { enddiff = distance2 - ce.Distance; }
+                            else
+                            { enddiff = ce.Distance; }
+
+                            OffRouteMA2Exit = ce.State + " " + ce.Interstate + " " + ce.Junction + " Distance: " + ce.Distance;
+                            
                         }
 
 
@@ -206,7 +209,9 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
                         sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.Append("OffRoute Major Area 1 Closest Exit: " + OffRouteMA1Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 1 Distance:" + startdiff + " * 2 * " + multiplier +" = " + startdistance + "<br /> ");
+                        sb.Append("OffRoute Major Area 2 Closest Exit: " + OffRouteMA2Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 2 Distance:" + enddiff + " * 2 * " + multiplier + " = " + enddistance + "<br /> ");
                         sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + startdistance + " + " + enddistance + " + 150(Broker Fee) = " + q.Price);
 
@@ -227,11 +232,12 @@ namespace RouteCalculator.Web.Controllers
                         foreach (ClosestMajorArea c in cma)
                         {
 
-                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
+                            List<MajorAreaRouteExit> exits = GetRouteExits(ma1.AreaName, c.AreaName, 2);
 
-                            exit = GetRouteExits(ma1.AreaName, c.AreaName, 2);
-                            mare.Add(exit);
-
+                            foreach (MajorAreaRouteExit exit in exits)
+                            {
+                                mare.Add(exit);
+                            }
                         }
 
                         List<ClosestExit> closestexits = new List<ClosestExit>();
@@ -253,32 +259,36 @@ namespace RouteCalculator.Web.Controllers
 
                         //ma1 distance to start
                         double startdiff = 0;
-                        if (GetDistanceToMAover30(startPoint, ma1) > 30)
+                        double distance1 = GetDistanceToMAover30(startPoint, ma1);
+                        string OffRouteMA1Exit = string.Empty;
+                        if (distance1 > 30)
                         {
                             MajorAreaRouteExit exit = new MajorAreaRouteExit();
-                            exit = GetRouteExits(ma1.AreaName, ma2.AreaName, 2);
+                            exit = GetRouteEndingAreaExit(ma1.AreaName, ma2.AreaName, 1, 99);
 
                             ClosestExit ce = GetClosestExit(exit, startPoint.Latitude, startPoint.Longitude);
 
-                            if (ce.Distance > 30)
-                            {
-                                if (ce.Distance - 30 > 10)
-                                {
-                                    startdiff = ce.Distance - 30;
-                                }
-                            }
+                            if (ce.Distance > 10 && ce.Distance < distance1)
+                            { startdiff = distance1 - ce.Distance; }
+                            else
+                            { startdiff = ce.Distance; }
+
+                            OffRouteMA1Exit = ce.State + " " + ce.Interstate + " " + ce.Junction + " Distance: " + ce.Distance;
 
                         }
                         
-                        
                         double offroute = 0;
+                        
+                        double exitdistance = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
 
-                        if (final.ClosestExitPointDistance > 6 & final.ClosestExitPointDistance <= 50)
+                        if (exitdistance > 6 & exitdistance <= 50)
                         { offroute = 50; }
-                        else if (final.ClosestExitPointDistance > 50 & final.ClosestExitPointDistance <= 100)
+                        else if (exitdistance > 50 & exitdistance <= 100)
                         { offroute = 100; }
-                        else if (final.ClosestExitPointDistance > 100)
+                        else if (exitdistance > 100)
                         { offroute = 150; }
+
+                        //final.ClosestExitPointDistance
 
 
 
@@ -296,11 +306,12 @@ namespace RouteCalculator.Web.Controllers
 
                         sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
                         sb.AppendLine("OffRoute Area 2: Closest Major Areas - " + cma[0].AreaName + "," + cma[1].AreaName + "," + cma[2].AreaName + "<br /> ");
-                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + "State: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().State + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
                         sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
                         sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.Append("OffRoute Major Area 1 Closest Exit: " + OffRouteMA1Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 1 Distance:" + startdiff + " * 2 * " + multiplier + " = " + startdistance + "<br /> ");
                         sb.AppendLine("OffRoute * Multiplier: " + (offroute * multiplier) + "<br /> ");
                         sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + startdistance + " + 150(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
@@ -318,11 +329,14 @@ namespace RouteCalculator.Web.Controllers
 
                         foreach (ClosestMajorArea c in cma)
                         {
+                            List<MajorAreaRouteExit> exits = GetRouteExits(c.AreaName, ma2.AreaName, 1);
 
-                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
+                            foreach (MajorAreaRouteExit exit in exits)
+                            {
+                                mare.Add(exit);
+                            }
 
-                            exit = GetRouteExits(c.AreaName, ma2.AreaName, 1);
-                            mare.Add(exit);
+
                         }
 
                         List<ClosestExit> closestexits = new List<ClosestExit>();
@@ -342,30 +356,36 @@ namespace RouteCalculator.Web.Controllers
 
                         //ma2 distance to endpoint
                         double enddiff = 0;
-                        if (GetDistanceToMAover30(endPoint, ma2) > 30)
+                        double distance2 = GetDistanceToMAover30(endPoint, ma2);
+                        string OffRouteMA2Exit = string.Empty;
+                        if (distance2 > 30)
                         {
                             MajorAreaRouteExit exit = new MajorAreaRouteExit();
-                            exit = GetRouteExits(ma1.AreaName, ma2.AreaName, 2);
+                            exit = GetRouteEndingAreaExit(ma1.AreaName, ma2.AreaName, 2, 99);
 
                             ClosestExit ce = GetClosestExit(exit, endPoint.Latitude, endPoint.Longitude);
 
-                            if (ce.Distance > 30)
-                            {
-                                if (ce.Distance - 30 > 10)
-                                {
-                                    enddiff = ce.Distance - 30;
-                                }
-                            }
+                            if (ce.Distance > 10 && ce.Distance < distance2)
+                            { enddiff = distance2 - ce.Distance; }
+                            else
+                            { enddiff = ce.Distance; }
+
+                            OffRouteMA2Exit = ce.State + " " + ce.Interstate + " " + ce.Junction + " Distance: " + ce.Distance;
+
                         }
 
                         double offroute = 0;
 
-                        if (final.ClosestExitPointDistance > 6 & final.ClosestExitPointDistance <= 50)
+                        double exitdistance = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+
+                        if (exitdistance > 6 & exitdistance <= 50)
                         { offroute = 50; }
-                        else if (final.ClosestExitPointDistance > 50 & final.ClosestExitPointDistance <= 100)
+                        else if (exitdistance > 50 & exitdistance <= 100)
                         { offroute = 100; }
-                        else if (final.ClosestExitPointDistance > 100)
+                        else if (exitdistance > 100)
                         { offroute = 150; }
+                        
+                        //final.ClosestExitPointDistance
 
                         Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
 
@@ -380,11 +400,12 @@ namespace RouteCalculator.Web.Controllers
 
                         sb.AppendLine("OffRoute Area 1: Closest Major Areas - " + cma[0].AreaName + "," + cma[1].AreaName + "," + cma[2].AreaName + "<br /> ");
                         sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
-                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + "State: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().State + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
                         sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
                         sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.Append("OffRoute Major Area 2 Closest Exit: " + OffRouteMA2Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 2 Distance:" + enddiff + " * 2 * " + multiplier + " = " + enddistance + "<br /> ");
                         sb.AppendLine("OffRoute * Multiplier: " + (offroute * multiplier) + "<br /> ");
                         sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + enddistance + " + 150(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
@@ -404,13 +425,16 @@ namespace RouteCalculator.Web.Controllers
 
                         foreach (ClosestMajorArea c1 in cma1)
                         {
-
-                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
-
+                            
                             foreach (ClosestMajorArea c2 in cma2)
                             {
-                                exit = GetRouteExits(c1.AreaName, c2.AreaName, 0);
-                                mare1.Add(exit);
+                                List<MajorAreaRouteExit> exits = GetRouteExits(c1.AreaName, c2.AreaName, 0);
+
+                                foreach (MajorAreaRouteExit exit in exits)
+                                {
+                                    mare1.Add(exit);
+                                }
+
                             }
                         }
 
@@ -447,21 +471,34 @@ namespace RouteCalculator.Web.Controllers
 
                         double offroute1 = 0;
 
-                        if (final1.ClosestExitPointDistance > 6 & final1.ClosestExitPointDistance <= 50)
+                        double exitdistance = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+
+                        if (exitdistance > 6 & exitdistance <= 50)
                         { offroute1 = 50; }
-                        else if (final1.ClosestExitPointDistance > 50 & final1.ClosestExitPointDistance <= 100)
+                        else if (exitdistance > 50 & exitdistance <= 100)
                         { offroute1 = 100; }
-                        else if (final1.ClosestExitPointDistance > 100)
+                        else if (exitdistance > 100)
                         { offroute1 = 150; }
+
+                        //final.ClosestExitPointDistance
+                        //if (final1.ClosestExitPointDistance > 6 & final1.ClosestExitPointDistance <= 50)
+                        //{ offroute1 = 50; }
+                        //else if (final1.ClosestExitPointDistance > 50 & final1.ClosestExitPointDistance <= 100)
+                        //{ offroute1 = 100; }
+                        //else if (final1.ClosestExitPointDistance > 100)
+                        //{ offroute1 = 150; }
 
 
                         //// GET MAJOR AREA 2 CLOSEST EXIT POINTS ////
                         for (int i = 0; i < cma2.Count(); i++)
                         {
-                            MajorAreaRouteExit exit = new MajorAreaRouteExit();
+                            List<MajorAreaRouteExit> exits = GetRouteExits(final1.AreaName, cma2[i].AreaName, 2);
 
-                            exit = GetRouteExits(final1.AreaName, cma2[i].AreaName, 2);
-                            mare2.Add(exit);
+                            foreach (MajorAreaRouteExit exit in exits)
+                            {
+                                mare2.Add(exit);
+                            }
+
                         }
 
 
@@ -482,12 +519,22 @@ namespace RouteCalculator.Web.Controllers
 
                         double offroute2 = 0;
 
-                        if (final2.ClosestExitPointDistance > 6 & final2.ClosestExitPointDistance <= 50)
-                        { offroute1 = 50; }
-                        else if (final2.ClosestExitPointDistance > 50 & final2.ClosestExitPointDistance <= 100)
+                        double exitdistance2 = closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+
+                        if (exitdistance2 > 6 & exitdistance2 <= 50)
+                        { offroute2 = 50; }
+                        else if (exitdistance > 50 & exitdistance <= 100)
                         { offroute2 = 100; }
-                        else if (final2.ClosestExitPointDistance > 100)
+                        else if (exitdistance > 100)
                         { offroute2 = 150; }
+
+                        //final.ClosestExitPointDistance
+                        //if (final2.ClosestExitPointDistance > 6 & final2.ClosestExitPointDistance <= 50)
+                        //{ offroute1 = 50; }
+                        //else if (final2.ClosestExitPointDistance > 50 & final2.ClosestExitPointDistance <= 100)
+                        //{ offroute2 = 100; }
+                        //else if (final2.ClosestExitPointDistance > 100)
+                        //{ offroute2 = 150; }
 
                         Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
 
@@ -500,9 +547,9 @@ namespace RouteCalculator.Web.Controllers
                         q.Price = (int)Math.Round(price, 1);
 
                         sb.AppendLine("OffRoute Area 1: Closest Major Areas - " + cma1[0].AreaName + "," + cma1[1].AreaName + "," + cma1[2].AreaName + "<br /> ");
-                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + "State: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().State + " Distance: " + closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
                         sb.AppendLine("OffRoute Area 2: Closest Major Areas - " + cma2[0].AreaName + "," + cma2[1].AreaName + "," + cma2[2].AreaName + "<br /> ");
-                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + " Distance: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
+                        sb.AppendLine("Closest Major Area Exit - Interstate: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Interstate + " Junction:" + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Junction + "State: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().State + " Distance: " + closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance + "<br /> ");
                         sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
                         sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
@@ -535,9 +582,9 @@ namespace RouteCalculator.Web.Controllers
         }
 
         
-        public MajorAreaRouteExit GetRouteExits(string ma1, string ma2, int dest)
+        public List<MajorAreaRouteExit> GetRouteExits(string ma1, string ma2, int dest)
         {
-
+            //Which MA should be checked for nearest exit ma1 = 1, ma2 =2
             if (Destination == null && dest == 2)
             { Destination = ma2; }
             if (Destination == null && dest == 1)
@@ -560,28 +607,97 @@ namespace RouteCalculator.Web.Controllers
 
             List<MajorAreaRouteExit> maExits = new List<MajorAreaRouteExit>();
 
+            int pos = 0;
             foreach (MajorAreaRouteExit mae in exits)
             {
                 MajorAreaRouteExit exit = new MajorAreaRouteExit();
 
-                exit.Id = mae.Id;
-                exit.start = mae.start;
-                exit.finish = mae.finish;
-                exit.RouteNumber = Convert.ToInt32(mae.RouteNumber);
-                exit.RouteLevel = mae.RouteLevel;
-                exit.state = mae.state;
-                exit.interstate = mae.interstate;
-                exit.Exit_from = mae.Exit_from;
-                exit.Exit_to = mae.Exit_to;
-                exit.PassThroughMA = mae.PassThroughMA;
+                if (Destination == ma2)
+                { dest = 2; }
+                else { dest = 1; }
+
+                exit = GetRouteEndingAreaExit(ma1, ma2, dest, pos);
+
+                maExits.Add(exit);
+
+                pos ++;
+            }
+            
+                        
+            return maExits;
+
+        }
+
+        public MajorAreaRouteExit GetRouteEndingAreaExit(string ma1, string ma2, int dest, int pos)
+        {
+            //Which MA should be checked for nearest exit ma1 = 1, ma2 =2
+            if (Destination == null && dest == 2)
+            { Destination = ma2; }
+            if (Destination == null && dest == 1)
+            { Destination = ma1; }
+            if (Destination == null && dest == 0)
+            { Destination = ma1; }
+
+            int start = Convert.ToInt32(ma1.Replace("A", ""));
+            int finish = Convert.ToInt32(ma2.Replace("A", ""));
+
+            string Major1 = string.Empty;
+            string Major2 = string.Empty;
+
+            if (start < finish)
+            { Major1 = ma1; Major2 = ma2; }
+            else
+            { Major1 = ma2; Major2 = ma1; }
+
+            List<MajorAreaRouteExit> exits = _db.MajorAreaRouteExits.Where(x => x.start == Major1 && x.finish == Major2 && x.RouteLevel != null).OrderBy(o1 => o1.RouteNumber).OrderBy(o2 => o2.RouteLevel).ToList<MajorAreaRouteExit>();
+
+            List<MajorAreaRouteExit> maExits = new List<MajorAreaRouteExit>();
+
+            if (pos != 99)
+            {
+                MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                exit.Id = exits[pos].Id;
+                exit.start = exits[pos].start;
+                exit.finish = exits[pos].finish;
+                exit.RouteNumber = Convert.ToInt32(exits[pos].RouteNumber);
+                exit.RouteLevel = exits[pos].RouteLevel;
+                exit.state = exits[pos].state;
+                exit.interstate = exits[pos].interstate;
+                exit.Exit_from = exits[pos].Exit_from;
+                exit.Exit_to = exits[pos].Exit_to;
+                exit.PassThroughMA = exits[pos].PassThroughMA;
 
                 maExits.Add(exit);
             }
-            
+            else
+            {
+                foreach (MajorAreaRouteExit mae in exits)
+                {
+                    MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                    exit.Id = mae.Id;
+                    exit.start = mae.start;
+                    exit.finish = mae.finish;
+                    exit.RouteNumber = Convert.ToInt32(mae.RouteNumber);
+                    exit.RouteLevel = mae.RouteLevel;
+                    exit.state = mae.state;
+                    exit.interstate = mae.interstate;
+                    exit.Exit_from = mae.Exit_from;
+                    exit.Exit_to = mae.Exit_to;
+                    exit.PassThroughMA = mae.PassThroughMA;
+
+                    maExits.Add(exit);
+                }
+            }
+
+
+            //Take This code and put it in another function
             if (Passthrough == null)
             { isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault(); }
             else
             { isFinal = maExits.Where(f => f.PassThroughMA == Passthrough).FirstOrDefault(); }
+
 
             if (isFinal == null)
             {
@@ -590,26 +706,28 @@ namespace RouteCalculator.Web.Controllers
                 int Pass = Convert.ToInt32(cont.PassThroughMA.Replace("A", ""));
 
                 if (("A" + Pass) == Destination)
-                { 
+                {
                     isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault();
                     Passthrough = null;
                     Destination = null;
                     return isFinal;
                 }
-          
+
                 Passthrough = cont.PassThroughMA;
 
                 if (Area < Pass)
-                { GetRouteExits(Destination, "A" + Pass.ToString(), dest); }
+                { GetRouteEndingAreaExit(Destination, "A" + Pass.ToString(), dest, 99); }
                 else
-                { GetRouteExits("A" + Pass.ToString(), Destination, dest); }
-         
+                { GetRouteEndingAreaExit("A" + Pass.ToString(), Destination, dest, 99); }
+
 
             }
+
             Passthrough = null;
             Destination = null;
-            return isFinal;
 
+
+            return isFinal;
         }
 
         public List<ClosestMajorArea> GetClosestMA(double oLat, double oLong, MajorArea majorarea)
@@ -706,13 +824,13 @@ namespace RouteCalculator.Web.Controllers
                 int eFrom = Convert.ToInt32(m.Exit_from);
                 int eTo = Convert.ToInt32(m.Exit_to);
 
-                if ((eFrom == 0 && eTo == 0) && ma.interstate == null)
+                if ((eFrom == 0 && eTo == 0) && m.interstate == null)
                 {
                     ClosestExit exit = new ClosestExit();
-
+                    exit.State = null;
                     exit.AreaName = null;
                     exit.Interstate = null;
-                    exit.Junction = null;
+                    exit.Junction = 0;
                     exit.Latitude = 0;
                     exit.Longitude = 0;
 
@@ -723,9 +841,9 @@ namespace RouteCalculator.Web.Controllers
 
                     list.Add(exit);
                 }
-                else if ((eFrom == 0 && eTo == 0) && ma.interstate != null)
+                else if ((eFrom == 0 && eTo == 0) && m.interstate != null)
                 {
-                    var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID == m.interstate);
+                    var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID.Contains(m.interstate));
 
                     var oCoord = new GeoCoordinate(lat, lon);
 
@@ -733,7 +851,7 @@ namespace RouteCalculator.Web.Controllers
                     {
                         
                         ClosestExit exit = new ClosestExit();
-
+                        exit.State = ex.STATE;
                         exit.AreaName = ma.start;
                         exit.Interstate = m.interstate;
                         exit.Junction = ex.Junction_ID;
@@ -744,7 +862,6 @@ namespace RouteCalculator.Web.Controllers
 
                         exit.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
 
-
                         list.Add(exit);
 
                     }
@@ -753,7 +870,7 @@ namespace RouteCalculator.Web.Controllers
                 else
                 {
 
-                    var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID == m.interstate);
+                    var exits = _db.USInterstateExits.Where(x => x.STATE == m.state && x.HIGHWAY_ID.Contains(m.interstate));
 
                     var oCoord = new GeoCoordinate(lat, lon);
 
@@ -762,7 +879,7 @@ namespace RouteCalculator.Web.Controllers
                         if (Convert.ToInt32(ex.Junction_ID) >= eFrom && Convert.ToInt32(ex.Junction_ID) <= eTo)
                         {
                             ClosestExit exit = new ClosestExit();
-
+                            exit.State = ex.STATE;
                             exit.AreaName = ma.start;
                             exit.Interstate = m.interstate;
                             exit.Junction = ex.Junction_ID;
@@ -772,7 +889,6 @@ namespace RouteCalculator.Web.Controllers
                             var eCoord = new GeoCoordinate(exit.Latitude, exit.Longitude);
 
                             exit.Distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
-
 
                             list.Add(exit);
                         }
@@ -785,9 +901,31 @@ namespace RouteCalculator.Web.Controllers
 
             ClosestExit final = last.FirstOrDefault();
 
+            var origin = new GeoCoordinate(lat, lon);
+
+
+            List<Double> distances = new List<Double>();
+
+            foreach (ClosestExit c in list)
+            {
+                var dest = new GeoCoordinate(c.Latitude, c.Longitude);
+                double distance = (origin.GetDistanceTo(dest) * 3.28084) / 5280;
+
+                distances.Add(distance);
+            }
+
+            distances.OrderBy(x => x);
+
             return final;
 
             
+        }
+
+        public ActionResult GetInterstates(string state, string interstate)
+        {
+            List<USInterstateExit> exits = _db.USInterstateExits.Where(x => x.STATE == state && x.HIGHWAY_ID.Contains(interstate)).ToList<USInterstateExit>();
+
+            return Json(exits, JsonRequestBehavior.AllowGet);
         }
 
         public double GetZiptoZipDistance(double lat1, double lon1, double lat2, double lon2)
@@ -840,11 +978,13 @@ namespace RouteCalculator.Web.Controllers
             var oCoord = new GeoCoordinate(point.Latitude, point.Longitude);
             var eCoord = new GeoCoordinate(maCoords.Latitude, maCoords.Longitude);
 
-            distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
-            
+            //distance = (oCoord.GetDistanceTo(eCoord) * 3.28084) / 5280;
 
+            distance = service.DrivingDistance(point.ZIPCode, eCoord.ToString());
             return distance;
         }
+
+
         
         
         
