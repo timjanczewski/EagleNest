@@ -11,6 +11,7 @@ namespace RouteCalculator.Domain.Entities
     public class Route
     {
         [Key]
+        public int ID { get; set; }
         public string Area1 { get; set; }
         public string Area2 { get; set; }
         public string Price { get; set; }

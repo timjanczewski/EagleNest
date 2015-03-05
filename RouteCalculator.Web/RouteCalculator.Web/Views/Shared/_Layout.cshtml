@@ -5,8 +5,12 @@
         <title>@ViewBag.Title - My ASP.NET MVC Application</title>
         <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
         <meta name="viewport" content="width=device-width" />
+        <script src="@Url.Content("~/Scripts/jquery-1.8.2.min.js")" type="text/javascript"> </script>
+	    <link href="@Url.Content("~/Content/Gridmvc.css")" rel="stylesheet" type="text/css" />
+	    <script src="@Url.Content("~/Scripts/gridmvc.min.js")" type="text/javascript"> </script>
         @Styles.Render("~/Content/css")
         @Scripts.Render("~/bundles/modernizr")
+
     </head>
     <body>
         <header>

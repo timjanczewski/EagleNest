@@ -50,6 +50,7 @@
     <Compile Include="Entities\Category.cs" />
     <Compile Include="Entities\CloseMajorArea.cs" />
     <Compile Include="Entities\ClosestExit.cs" />
+    <Compile Include="Entities\Setting.cs" />
     <Compile Include="Entities\MajorAreaCoord.cs" />
     <Compile Include="Entities\USZipcode.cs" />
     <Compile Include="Entities\USInterstateCoord.cs" />

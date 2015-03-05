@@ -90,6 +90,11 @@ h5, h6 {
         text-decoration: none;
     }
 
+textbox {
+    width: 100px;
+}
+
+
 
 /* main layout
 ----------------------------------------------------------*/
@@ -431,7 +436,7 @@ input, textarea {
     font-size: 1.2em;
     margin: 5px 0 6px 0;
     padding: 5px;
-    width: 300px;
+    width: 200px;
 }
 
 textarea {

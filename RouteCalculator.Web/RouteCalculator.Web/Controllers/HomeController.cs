@@ -19,6 +19,9 @@ namespace RouteCalculator.Web.Controllers
         public string Destination;
         public string Passthrough;
 
+        public Setting setting = new Setting();
+        
+
         public StringBuilder sb = new StringBuilder();
 
         public ActionResult Index()
@@ -41,6 +44,7 @@ namespace RouteCalculator.Web.Controllers
 
         public ActionResult GetPrice(string address1, string address2, string vehicle)
         {
+            setting = _db.Settings.FirstOrDefault();
             USZipcode startPoint = GetUSZipcode(address1);
             USZipcode endPoint = GetUSZipcode(address2);
 
@@ -75,8 +79,8 @@ namespace RouteCalculator.Web.Controllers
             ZipcodePool start = _db.ZipcodePools.Where(x => x.ZipCode == startPoint.ZIPCode).FirstOrDefault();
             ZipcodePool end = _db.ZipcodePools.Where(x => x.ZipCode == endPoint.ZIPCode).FirstOrDefault();
 
-            MajorArea ma1 = _db.MajorAreas.Where(x => x.Pool1Name == start.PoolName).FirstOrDefault();
-            MajorArea ma2 = _db.MajorAreas.Where(x => x.Pool1Name == end.PoolName).FirstOrDefault();
+            MajorArea ma1 = _db.MajorAreas.Where(x => x.Pool1Name == start.PoolName && x.Pool1State == start.State).FirstOrDefault();
+            MajorArea ma2 = _db.MajorAreas.Where(x => x.Pool1Name == end.PoolName && x.Pool1State == end.State).FirstOrDefault();
             
             Quote q = new Quote();
             
@@ -104,7 +108,7 @@ namespace RouteCalculator.Web.Controllers
                 { basePrice = 100; }
 
                 double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                double price = Convert.ToDouble(basePrice) * multiplier + (150);
+                double price = Convert.ToDouble(basePrice) * multiplier + (setting.BrokerFee);
 
                 q.Vehicle = Make + " " + Model;
                 q.Area1 = address1;
@@ -114,8 +118,8 @@ namespace RouteCalculator.Web.Controllers
                 
                 sb.AppendLine("Base Price: " + basePrice + "<br /> ");
                 sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                sb.AppendLine("Broker Fee: 150 <br /> ");
-                sb.AppendLine("Quote: " + basePrice + " * " + multiplier + " + 150(Broker Fee) = " + q.Price);
+                sb.AppendLine("Broker Fee: " + setting.BrokerFee + " <br /> ");
+                sb.AppendLine("Quote: " + basePrice + " * " + multiplier + " " + setting.BrokerFee +"(Broker Fee) = " + q.Price);
 
                 ViewBag.Log = sb.ToString();
             }
@@ -135,7 +139,7 @@ namespace RouteCalculator.Web.Controllers
                         { basePrice = 100; }
 
                         double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                        double price = Convert.ToDouble(basePrice) * multiplier + (150);
+                        double price = Convert.ToDouble(basePrice) * multiplier + (setting.BrokerFee);
 
                         q.Vehicle = Make + " " + Model;
                         q.Area1 = address1;
@@ -146,8 +150,8 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + basePrice + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                        sb.AppendLine("Broker Fee: 150 <br /> ");
-                        sb.AppendLine("Quote: " + basePrice + " * " + multiplier + " + 150(Broker Fee) = " + q.Price);
+                        sb.AppendLine("Broker Fee: " + setting.BrokerFee + " <br /> ");
+                        sb.AppendLine("Quote: " + basePrice + " * " + multiplier + "  "+ setting.BrokerFee + "(Broker Fee) = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
                     }
@@ -195,9 +199,9 @@ namespace RouteCalculator.Web.Controllers
 
                         double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
 
-                        double startdistance = startdiff * 2 * multiplier;
-                        double enddistance = enddiff * 2 * multiplier;
-                        double price = Convert.ToDouble(baseprice.Price) * multiplier + startdistance + enddistance + (150);
+                        double startdistance = startdiff * setting.PricePerMile * multiplier;
+                        double enddistance = enddiff * setting.PricePerMile * multiplier;
+                        double price = Convert.ToDouble(baseprice.Price) * multiplier + startdistance + enddistance + (setting.BrokerFee);
 
                         q.Vehicle = Make + " " + Model;
                         q.Area1 = address1;
@@ -208,12 +212,12 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("Broker Fee: " + setting.BrokerFee + " <br /> ");
                         sb.Append("OffRoute Major Area 1 Closest Exit: " + OffRouteMA1Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 1 Distance:" + startdiff + " * 2 * " + multiplier +" = " + startdistance + "<br /> ");
                         sb.Append("OffRoute Major Area 2 Closest Exit: " + OffRouteMA2Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 2 Distance:" + enddiff + " * 2 * " + multiplier + " = " + enddistance + "<br /> ");
-                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + startdistance + " + " + enddistance + " + 150(Broker Fee) = " + q.Price);
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + startdistance + " + " + enddistance + "  " + setting.BrokerFee + "(Broker Fee) = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
                     }
@@ -238,12 +242,20 @@ namespace RouteCalculator.Web.Controllers
                             {
                                 mare.Add(exit);
                             }
+
+                            Passthrough = null;
+                            Destination = null;
                         }
 
                         List<ClosestExit> closestexits = new List<ClosestExit>();
                         foreach (MajorAreaRouteExit mae in mare)
                         {
-                            closestexits.Add(GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude));
+                            if (mae.PassThroughMA != null)
+                            {
+                                ClosestExit ce = GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude);
+                                ce.FinalMA = mae.PassThroughMA;
+                                closestexits.Add(ce);
+                            }
                         }
 
                         for (int i = 0; i < cma.Count(); i++)
@@ -253,9 +265,11 @@ namespace RouteCalculator.Web.Controllers
 
                         }
 
-                        ClosestMajorArea final = (ClosestMajorArea)cma.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
+                        //ClosestMajorArea final = (ClosestMajorArea)cma.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
 
-                        ma2 = _db.MajorAreas.Where(x => x.AreaName == final.AreaName).FirstOrDefault();
+                        string final = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().FinalMA;
+
+                        ma2 = _db.MajorAreas.Where(x => x.AreaName == final).FirstOrDefault();
 
                         //ma1 distance to start
                         double startdiff = 0;
@@ -282,11 +296,11 @@ namespace RouteCalculator.Web.Controllers
                         double exitdistance = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
 
                         if (exitdistance > 6 & exitdistance <= 50)
-                        { offroute = 50; }
+                        { offroute = setting.OffRoute1; }
                         else if (exitdistance > 50 & exitdistance <= 100)
-                        { offroute = 100; }
+                        { offroute = setting.OffRoute2; }
                         else if (exitdistance > 100)
-                        { offroute = 150; }
+                        { offroute = setting.OffRoute3; }
 
                         //final.ClosestExitPointDistance
 
@@ -295,8 +309,8 @@ namespace RouteCalculator.Web.Controllers
                         Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
 
                         double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                        double startdistance = startdiff * 2 * multiplier;
-                        double price = (Convert.ToDouble(baseprice.Price) + offroute) * multiplier + startdistance + (150);
+                        double startdistance = startdiff * setting.PricePerMile * multiplier;
+                        double price = (Convert.ToDouble(baseprice.Price) + offroute) * multiplier + startdistance + (setting.BrokerFee);
 
                         q.Vehicle = Make + " " + Model;
                         q.Area1 = address1;
@@ -310,11 +324,11 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("Broker Fee:" + setting.BrokerFee + "<br /> ");
                         sb.Append("OffRoute Major Area 1 Closest Exit: " + OffRouteMA1Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 1 Distance:" + startdiff + " * 2 * " + multiplier + " = " + startdistance + "<br /> ");
                         sb.AppendLine("OffRoute * Multiplier: " + (offroute * multiplier) + "<br /> ");
-                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + startdistance + " + 150(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + startdistance + " " + setting.BrokerFee + "(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
 
@@ -336,23 +350,33 @@ namespace RouteCalculator.Web.Controllers
                                 mare.Add(exit);
                             }
 
+                            Passthrough = null;
+                            Destination = null;
+
 
                         }
 
                         List<ClosestExit> closestexits = new List<ClosestExit>();
+                        
                         foreach (MajorAreaRouteExit mae in mare)
                         {
-                            closestexits.Add(GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude));
+                            //hack
+                            ClosestExit ce = GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude);
+                            ce.FinalMA = mae.PassThroughMA;
+                            closestexits.Add(ce);
+                            
                         }
 
                         for (int i = 0; i < cma.Count(); i++)
                         {
                             cma[i].ClosestExitPointDistance = closestexits[i].Distance;
+                            
                         }
 
-                        ClosestMajorArea final = cma.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
+                        //ClosestMajorArea final = cma.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
+                        string final = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().FinalMA;
 
-                        ma1 = _db.MajorAreas.Where(x => x.AreaName == final.AreaName).FirstOrDefault();
+                        ma1 = _db.MajorAreas.Where(x => x.AreaName == final).FirstOrDefault();
 
                         //ma2 distance to endpoint
                         double enddiff = 0;
@@ -379,19 +403,19 @@ namespace RouteCalculator.Web.Controllers
                         double exitdistance = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
 
                         if (exitdistance > 6 & exitdistance <= 50)
-                        { offroute = 50; }
+                        { offroute = setting.OffRoute1; }
                         else if (exitdistance > 50 & exitdistance <= 100)
-                        { offroute = 100; }
+                        { offroute = setting.OffRoute2; }
                         else if (exitdistance > 100)
-                        { offroute = 150; }
+                        { offroute = setting.OffRoute3; }
                         
                         //final.ClosestExitPointDistance
 
                         Route baseprice = _db.Routes.Where(y => y.Area1 == ma1.AreaName && y.Area2 == ma2.AreaName).FirstOrDefault();
 
                         double multiplier = 1 + service.GetVehicleMultiplier(Make, Model);
-                        double enddistance = enddiff * 2 * multiplier;
-                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (150) + (offroute * multiplier);
+                        double enddistance = enddiff * setting.PricePerMile * multiplier;
+                        double price = Convert.ToDouble(baseprice.Price) * multiplier + (setting.BrokerFee) + (offroute * multiplier);
 
                         q.Vehicle = Make + " " + Model;
                         q.Area1 = address1;
@@ -404,11 +428,11 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Major Area 1: " + ma1.AreaName + " - " + ma1.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("Broker Fee:" + setting.BrokerFee + "<br /> ");
                         sb.Append("OffRoute Major Area 2 Closest Exit: " + OffRouteMA2Exit + "<br /> ");
                         sb.AppendLine("OffRoute Major Area 2 Distance:" + enddiff + " * 2 * " + multiplier + " = " + enddistance + "<br /> ");
                         sb.AppendLine("OffRoute * Multiplier: " + (offroute * multiplier) + "<br /> ");
-                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + enddistance + " + 150(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + " + enddistance + " " + setting.BrokerFee + "(Broker Fee) + " + (offroute * multiplier) + " = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
                     }
@@ -428,12 +452,15 @@ namespace RouteCalculator.Web.Controllers
                             
                             foreach (ClosestMajorArea c2 in cma2)
                             {
-                                List<MajorAreaRouteExit> exits = GetRouteExits(c1.AreaName, c2.AreaName, 0);
+                                List<MajorAreaRouteExit> exits = GetRouteExits(c1.AreaName, c2.AreaName, 2);
 
                                 foreach (MajorAreaRouteExit exit in exits)
                                 {
                                     mare1.Add(exit);
                                 }
+
+                                Passthrough = null;
+                                Destination = null;
 
                             }
                         }
@@ -441,44 +468,50 @@ namespace RouteCalculator.Web.Controllers
                         List<ClosestExit> closestexits = new List<ClosestExit>();
                         foreach (MajorAreaRouteExit mae in mare1)
                         {
-                            closestexits.Add(GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude));
+                            ClosestExit ce = GetClosestExit(mae, startPoint.Latitude, startPoint.Longitude);
+                            ce.FinalMA = mae.PassThroughMA;
+                            closestexits.Add(ce);
+
                         }
 
 
-                        List<ClosestExit> ce1 = new List<ClosestExit>();
-                        List<ClosestExit> ce2 = new List<ClosestExit>();
-                        List<ClosestExit> ce3 = new List<ClosestExit>();
+                        //List<ClosestExit> ce1 = new List<ClosestExit>();
+                        //List<ClosestExit> ce2 = new List<ClosestExit>();
+                        //List<ClosestExit> ce3 = new List<ClosestExit>();
 
-                        ce1.Add(closestexits[0]);
-                        ce1.Add(closestexits[1]);
-                        ce1.Add(closestexits[2]);
+                        //ce1.Add(closestexits[0]);
+                        //ce1.Add(closestexits[1]);
+                        //ce1.Add(closestexits[2]);
 
-                        ce2.Add(closestexits[3]);
-                        ce2.Add(closestexits[4]);
-                        ce2.Add(closestexits[5]);
+                        //ce2.Add(closestexits[3]);
+                        //ce2.Add(closestexits[4]);
+                        //ce2.Add(closestexits[5]);
 
-                        ce3.Add(closestexits[6]);
-                        ce3.Add(closestexits[7]);
-                        ce3.Add(closestexits[8]);
+                        //ce3.Add(closestexits[6]);
+                        //ce3.Add(closestexits[7]);
+                        //ce3.Add(closestexits[8]);
 
-                        cma1[0].ClosestExitPointDistance = ce1.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
-                        cma1[1].ClosestExitPointDistance = ce2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
-                        cma1[2].ClosestExitPointDistance = ce3.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+                        //cma1[0].ClosestExitPointDistance = ce1.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+                        //cma1[1].ClosestExitPointDistance = ce2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
+                        //cma1[2].ClosestExitPointDistance = ce3.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
 
-                        ClosestMajorArea final1 = cma1.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
+                        //ClosestMajorArea final1 = cma1.OrderBy(x => x.ClosestExitPointDistance).Take(1).FirstOrDefault();
+                        //ma1 = _db.MajorAreas.Where(x => x.AreaName == final1.AreaName).FirstOrDefault();
+                        
+                        string final1 = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().FinalMA;
 
-                        ma1 = _db.MajorAreas.Where(x => x.AreaName == final1.AreaName).FirstOrDefault();
+                        ma1 = _db.MajorAreas.Where(x => x.AreaName == final1).FirstOrDefault();
 
                         double offroute1 = 0;
 
                         double exitdistance = closestexits.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
 
                         if (exitdistance > 6 & exitdistance <= 50)
-                        { offroute1 = 50; }
+                        { offroute1 = setting.OffRoute1; }
                         else if (exitdistance > 50 & exitdistance <= 100)
-                        { offroute1 = 100; }
+                        { offroute1 = setting.OffRoute2; }
                         else if (exitdistance > 100)
-                        { offroute1 = 150; }
+                        { offroute1 = setting.OffRoute3; }
 
                         //final.ClosestExitPointDistance
                         //if (final1.ClosestExitPointDistance > 6 & final1.ClosestExitPointDistance <= 50)
@@ -492,12 +525,15 @@ namespace RouteCalculator.Web.Controllers
                         //// GET MAJOR AREA 2 CLOSEST EXIT POINTS ////
                         for (int i = 0; i < cma2.Count(); i++)
                         {
-                            List<MajorAreaRouteExit> exits = GetRouteExits(final1.AreaName, cma2[i].AreaName, 2);
+                            List<MajorAreaRouteExit> exits = GetRouteExits(final1, cma2[i].AreaName, 2);
 
                             foreach (MajorAreaRouteExit exit in exits)
                             {
                                 mare2.Add(exit);
                             }
+
+                            Passthrough = null;
+                            Destination = null;
 
                         }
 
@@ -505,7 +541,10 @@ namespace RouteCalculator.Web.Controllers
                         List<ClosestExit> closestexits2 = new List<ClosestExit>();
                         foreach (MajorAreaRouteExit mae in mare2)
                         {
-                            closestexits2.Add(GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude));
+                            ClosestExit ce = GetClosestExit(mae, endPoint.Latitude, endPoint.Longitude);
+                            ce.FinalMA = mae.PassThroughMA;
+                            closestexits2.Add(ce);
+
                         }
 
                         for (int i = 0; i < cma2.Count(); i++)
@@ -513,20 +552,23 @@ namespace RouteCalculator.Web.Controllers
                             cma2[i].ClosestExitPointDistance = closestexits2[i].Distance;
                         }
 
-                        ClosestMajorArea final2 = (ClosestMajorArea)cma2.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
+                        //ClosestMajorArea final2 = (ClosestMajorArea)cma2.OrderBy(x => x.ClosestExitPointDistance).FirstOrDefault();
+                        //ma2 = _db.MajorAreas.Where(x => x.AreaName == final2.AreaName).FirstOrDefault();
 
-                        ma2 = _db.MajorAreas.Where(x => x.AreaName == final2.AreaName).FirstOrDefault();
+                        string final2 = closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().FinalMA;
+
+                        ma2 = _db.MajorAreas.Where(x => x.AreaName == final2).FirstOrDefault();
 
                         double offroute2 = 0;
 
                         double exitdistance2 = closestexits2.OrderBy(x => x.Distance).Take(1).FirstOrDefault().Distance;
 
                         if (exitdistance2 > 6 & exitdistance2 <= 50)
-                        { offroute2 = 50; }
-                        else if (exitdistance > 50 & exitdistance <= 100)
-                        { offroute2 = 100; }
-                        else if (exitdistance > 100)
-                        { offroute2 = 150; }
+                        { offroute2 = setting.OffRoute1; }
+                        else if (exitdistance2 > 50 & exitdistance2 <= 100)
+                        { offroute2 = setting.OffRoute2; }
+                        else if (exitdistance2 > 100)
+                        { offroute2 = setting.OffRoute3; }
 
                         //final.ClosestExitPointDistance
                         //if (final2.ClosestExitPointDistance > 6 & final2.ClosestExitPointDistance <= 50)
@@ -554,10 +596,10 @@ namespace RouteCalculator.Web.Controllers
                         sb.AppendLine("Major Area 2: " + ma2.AreaName + " - " + ma2.MainCityName + "<br /> ");
                         sb.AppendLine("Base Price: " + baseprice.Price + "<br /> ");
                         sb.AppendLine("Vehicle Category Multiplier: " + multiplier + "<br /> ");
-                        sb.AppendLine("Broker Fee: 150 <br /> ");
+                        sb.AppendLine("Broker Fee:" + setting.BrokerFee + "<br /> ");
                         sb.AppendLine("OffRoute1 * Multiplier: " + (offroute1 * multiplier) + "<br /> ");
                         sb.AppendLine("OffRoute2 * Multiplier: " + (offroute2 * multiplier) + "<br /> ");
-                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " + 150(Broker Fee) + " + (offroute1 * multiplier) + " + " + (offroute2 * multiplier) + " = " + q.Price);
+                        sb.AppendLine("Quote: " + baseprice.Price + " * " + multiplier + " " + setting.BrokerFee + "(Broker Fee) + " + (offroute1 * multiplier) + " + " + (offroute2 * multiplier) + " = " + q.Price);
 
                         ViewBag.Log = sb.ToString();
 
@@ -620,112 +662,111 @@ namespace RouteCalculator.Web.Controllers
 
                 maExits.Add(exit);
 
+
                 pos ++;
             }
+
+
             
-                        
             return maExits;
 
         }
 
         public MajorAreaRouteExit GetRouteEndingAreaExit(string ma1, string ma2, int dest, int pos)
         {
-            //Which MA should be checked for nearest exit ma1 = 1, ma2 =2
-            if (Destination == null && dest == 2)
-            { Destination = ma2; }
-            if (Destination == null && dest == 1)
-            { Destination = ma1; }
-            if (Destination == null && dest == 0)
-            { Destination = ma1; }
 
-            int start = Convert.ToInt32(ma1.Replace("A", ""));
-            int finish = Convert.ToInt32(ma2.Replace("A", ""));
+                //Which MA should be checked for nearest exit ma1 = 1, ma2 =2
+                if (Destination == null && dest == 2)
+                { Destination = ma2; }
+                if (Destination == null && dest == 1)
+                { Destination = ma1; }
+                if (Destination == null && dest == 0)
+                { Destination = ma1; }
 
-            string Major1 = string.Empty;
-            string Major2 = string.Empty;
+                int start = Convert.ToInt32(ma1.Replace("A", ""));
+                int finish = Convert.ToInt32(ma2.Replace("A", ""));
 
-            if (start < finish)
-            { Major1 = ma1; Major2 = ma2; }
-            else
-            { Major1 = ma2; Major2 = ma1; }
+                string Major1 = string.Empty;
+                string Major2 = string.Empty;
 
-            List<MajorAreaRouteExit> exits = _db.MajorAreaRouteExits.Where(x => x.start == Major1 && x.finish == Major2 && x.RouteLevel != null).OrderBy(o1 => o1.RouteNumber).OrderBy(o2 => o2.RouteLevel).ToList<MajorAreaRouteExit>();
+                if (start < finish)
+                { Major1 = ma1; Major2 = ma2; }
+                else
+                { Major1 = ma2; Major2 = ma1; }
 
-            List<MajorAreaRouteExit> maExits = new List<MajorAreaRouteExit>();
+                List<MajorAreaRouteExit> exits = _db.MajorAreaRouteExits.Where(x => x.start == Major1 && x.finish == Major2 && x.RouteLevel != null).OrderBy(o1 => o1.RouteNumber).OrderBy(o2 => o2.RouteLevel).ToList<MajorAreaRouteExit>();
 
-            if (pos != 99)
-            {
-                MajorAreaRouteExit exit = new MajorAreaRouteExit();
+                List<MajorAreaRouteExit> maExits = new List<MajorAreaRouteExit>();
 
-                exit.Id = exits[pos].Id;
-                exit.start = exits[pos].start;
-                exit.finish = exits[pos].finish;
-                exit.RouteNumber = Convert.ToInt32(exits[pos].RouteNumber);
-                exit.RouteLevel = exits[pos].RouteLevel;
-                exit.state = exits[pos].state;
-                exit.interstate = exits[pos].interstate;
-                exit.Exit_from = exits[pos].Exit_from;
-                exit.Exit_to = exits[pos].Exit_to;
-                exit.PassThroughMA = exits[pos].PassThroughMA;
-
-                maExits.Add(exit);
-            }
-            else
-            {
-                foreach (MajorAreaRouteExit mae in exits)
+                if (pos != 99)
                 {
                     MajorAreaRouteExit exit = new MajorAreaRouteExit();
 
-                    exit.Id = mae.Id;
-                    exit.start = mae.start;
-                    exit.finish = mae.finish;
-                    exit.RouteNumber = Convert.ToInt32(mae.RouteNumber);
-                    exit.RouteLevel = mae.RouteLevel;
-                    exit.state = mae.state;
-                    exit.interstate = mae.interstate;
-                    exit.Exit_from = mae.Exit_from;
-                    exit.Exit_to = mae.Exit_to;
-                    exit.PassThroughMA = mae.PassThroughMA;
+                    exit.Id = exits[pos].Id;
+                    exit.start = exits[pos].start;
+                    exit.finish = exits[pos].finish;
+                    exit.RouteNumber = Convert.ToInt32(exits[pos].RouteNumber);
+                    exit.RouteLevel = exits[pos].RouteLevel;
+                    exit.state = exits[pos].state;
+                    exit.interstate = exits[pos].interstate;
+                    exit.Exit_from = exits[pos].Exit_from;
+                    exit.Exit_to = exits[pos].Exit_to;
+                    exit.PassThroughMA = exits[pos].PassThroughMA;
 
                     maExits.Add(exit);
                 }
-            }
-
-
-            //Take This code and put it in another function
-            if (Passthrough == null)
-            { isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault(); }
-            else
-            { isFinal = maExits.Where(f => f.PassThroughMA == Passthrough).FirstOrDefault(); }
-
-
-            if (isFinal == null)
-            {
-                MajorAreaRouteExit cont = maExits.FirstOrDefault();
-                int Area = Convert.ToInt32(Destination.Replace("A", ""));
-                int Pass = Convert.ToInt32(cont.PassThroughMA.Replace("A", ""));
-
-                if (("A" + Pass) == Destination)
+                else
                 {
-                    isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault();
-                    Passthrough = null;
-                    Destination = null;
-                    return isFinal;
+                    foreach (MajorAreaRouteExit mae in exits)
+                    {
+                        MajorAreaRouteExit exit = new MajorAreaRouteExit();
+
+                        exit.Id = mae.Id;
+                        exit.start = mae.start;
+                        exit.finish = mae.finish;
+                        exit.RouteNumber = Convert.ToInt32(mae.RouteNumber);
+                        exit.RouteLevel = mae.RouteLevel;
+                        exit.state = mae.state;
+                        exit.interstate = mae.interstate;
+                        exit.Exit_from = mae.Exit_from;
+                        exit.Exit_to = mae.Exit_to;
+                        exit.PassThroughMA = mae.PassThroughMA;
+
+                        maExits.Add(exit);
+                    }
                 }
 
-                Passthrough = cont.PassThroughMA;
 
-                if (Area < Pass)
-                { GetRouteEndingAreaExit(Destination, "A" + Pass.ToString(), dest, 99); }
+                //Take This code and put it in another function
+                if (Passthrough == null)
+                { isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault(); }
                 else
-                { GetRouteEndingAreaExit("A" + Pass.ToString(), Destination, dest, 99); }
+                { isFinal = maExits.Where(f => f.PassThroughMA == Passthrough).FirstOrDefault(); }
 
 
-            }
+                if (isFinal == null)
+                {
+                    MajorAreaRouteExit cont = maExits.FirstOrDefault();
+                    int Area = Convert.ToInt32(Destination.Replace("A", ""));
+                    int Pass = Convert.ToInt32(cont.PassThroughMA.Replace("A", ""));
 
-            Passthrough = null;
-            Destination = null;
+                    if (("A" + Pass) == Destination)
+                    {
+                        isFinal = maExits.Where(f => f.PassThroughMA == Destination).FirstOrDefault();
+                        return isFinal;
+                    }
 
+                    Passthrough = cont.PassThroughMA;
+
+                    if (Area < Pass)
+                    { GetRouteEndingAreaExit(Destination, "A" + Pass.ToString(), dest, 99); }
+                    else
+                    { GetRouteEndingAreaExit("A" + Pass.ToString(), Destination, dest, 99); }
+
+
+                }
+
+                isFinal.PassThroughMA = Destination;
 
             return isFinal;
         }

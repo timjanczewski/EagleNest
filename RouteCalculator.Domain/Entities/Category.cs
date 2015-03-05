@@ -13,7 +13,7 @@ namespace RouteCalculator.Domain.Entities
         [Key]
         public int Id { get; set; }
         public string Class { get; set; }
-        public decimal PricePercentIncrease { get; set; }
+        public double PricePercentIncrease { get; set; }
 
     }
 }
